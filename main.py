@@ -121,10 +121,10 @@ def spawn_piece(board):
             else:
                 board[row][col] = 2
 
-    if count < 1:
-        full_board = True
+    if count == 0 and not can_move_check(board):
+        return board, True  # game over
 
-    return board, full_board
+    return board, False  # game not over
 
 
 def move_board(board, move_direction):
@@ -252,6 +252,7 @@ def can_move_check(board):
             if j < size - 1 and board[i][j] == board[i][j + 1]:
                 return True  # Check horizontal moves
     return False
+
 
 # main game loop
 run = True
