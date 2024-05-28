@@ -59,6 +59,9 @@ Variables used in the game
     - run: bool -> run status of the game
     
     - start_time: int -> start time of the timed game
+    
+    - current_game_mode -> tracks the currently selected game mode
+
 """
 window_width = 400
 window_height = 500
@@ -131,7 +134,7 @@ except FileNotFoundError:
 init_time_high_score = timed_high_score
 
 run = False
-
+current_game_mode = None
 
 # endregion VARIABLES
 
@@ -515,6 +518,8 @@ def main_menu():
     """
     Draw the main menu of the game with the start, timed mode, tutorial, and exit buttons
     """
+    global current_game_mode
+
     menu = True
     while menu:
         screen.fill(colors["screen_color"])
@@ -548,22 +553,28 @@ def main_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                return None
+                return None, False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = event.pos
+                new_mode = None
                 if start_game_rect.collidepoint(mouse_pos):
-                    return 'classic'
+                    new_mode = 'classic'
                 elif timed_game_rect.collidepoint(mouse_pos):
-                    return 'timed'
+                    new_mode = 'timed'
                 elif tutorial_rect.collidepoint(mouse_pos):
                     show_tutorial()
                 elif exit_game_rect.collidepoint(mouse_pos):
                     pygame.quit()
-                    return None
+                    return None, False
+
+                if new_mode:
+                    mode_changed = (new_mode != current_game_mode)
+                    current_game_mode = new_mode
+                    return new_mode, mode_changed
 
         timer.tick(fps)
 
-    return False
+    return False, False
 
 
 def return_to_menu():
@@ -782,13 +793,22 @@ def main():
     Run the main menu and the game loop based on the user's choice
     """
     global run
-    run = main_menu()
+    run, mode_changed = main_menu()
     while run is not None and run is not False:
-        if run == 'classic':
-            classic_game_loop()
-        elif run == 'timed':
-            timed_game_loop()
-        run = main_menu()
+        if mode_changed:
+            if run == 'classic':
+                reset_game_data()
+                classic_game_loop()
+            elif run == 'timed':
+                reset_timed_game_data()
+                timed_game_loop()
+        else:
+            if run == 'classic':
+                classic_game_loop()
+            elif run == 'timed':
+                timed_game_loop()
+
+        run, mode_changed = main_menu()
 
 
 if __name__ == "__main__":
