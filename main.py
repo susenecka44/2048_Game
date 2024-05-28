@@ -13,10 +13,7 @@ pygame.display.set_caption("2048")
 timer = pygame.time.Clock()
 fps = 60
 font = pygame.font.SysFont('Arial', 24)
-# board variables definitions
-board_rectangle_dimensions = [0, 0, 400, 400]
-board_border_width = 0
-board_rectangle_border_radius = 10
+
 
 # color library
 colors = {0: (251, 248, 204),
@@ -36,7 +33,17 @@ colors = {0: (251, 248, 204),
           "other": (105, 153, 93),
           "bg": (42, 43, 46),
           "screen_color": (251, 251, 251),
+          "game_over": (193, 98, 0),
           }
+
+# board variables definitions
+board_rectangle_dimensions = [0, 0, 400, 400]
+board_border_width = 0
+board_rectangle_border_radius = 10
+
+# game over screen
+game_over_rect = [50, 50, 300, 100]
+
 # game variables
 # _ is a variable that is not going to be used -> not necessary to give it a name
 board_values = [[0 for _ in range(4)] for _ in range(4)]
@@ -54,10 +61,18 @@ try:
 except FileNotFoundError:
     high_score = 0
 
+init_high_score = high_score
+
 # endregion VARIABLES
 def draw_board():
     pygame.draw.rect(screen, colors["bg"], board_rectangle_dimensions, board_border_width,
                      board_rectangle_border_radius)
+
+    # Display scores
+    score_text = font.render(f"Score: {score}", True, colors['dark_text'])
+    high_score_text = font.render(f"High Score: {high_score}", True, colors['dark_text'])
+    screen.blit(score_text, (10, 410))
+    screen.blit(high_score_text, (10, 450))
 
 
 def draw_pieces(board):
@@ -83,6 +98,13 @@ def draw_pieces(board):
                 pygame.draw.rect(screen, colors["light_text"], [j * 95 + 20, i * 95 + 20, 75, 75], 2, 10)
 
 
+def draw_over():
+    pygame.draw.rect(screen, colors["game_over"], game_over_rect, board_border_width, board_rectangle_border_radius)
+    game_over_text = font.render("Game Over", True, colors["light_text"])
+    press_enter_text = font.render("Press Enter to play again", True, colors["dark_text"])
+    screen.blit(game_over_text, (130, 65))
+    screen.blit(press_enter_text, (70, 105))
+
 def spawn_piece(board):
     # only one new piece per function call
     count = 0
@@ -105,19 +127,20 @@ def spawn_piece(board):
 
 
 def move_board(board, move_direction):
+    global score
     merged = [[False for _ in range(4)] for _ in range(4)]
     if move_direction == "UP":
-        board = move_up(board)
+        board, score = move_up(board, score)
     elif move_direction == "DOWN":
-        board = move_down(board)
+        board, score = move_down(board, score)
     elif move_direction == "LEFT":
-        board = move_left(board)
+        board, score = move_left(board, score)
     elif move_direction == "RIGHT":
-        board = move_right(board)
+        board, score = move_right(board, score)
     return board
 
 
-def move_up(board):
+def move_up(board, score):
     size = len(board)
     for col in range(size):
         # Compact the column
@@ -131,6 +154,7 @@ def move_up(board):
                 continue
             if i + 1 < len(new_col) and new_col[i] == new_col[i + 1]:
                 merged_col.append(new_col[i] * 2)
+                score += new_col[i] * 2
                 skip = True
             else:
                 merged_col.append(new_col[i])
@@ -139,9 +163,9 @@ def move_up(board):
         # Place back into the board
         for row in range(size):
             board[row][col] = merged_col[row]
-    return board
+    return board, score
 
-def move_down(board):
+def move_down(board, score):
     size = len(board)
     for col in range(size):
         # Compact the column in reverse (bottom to top)
@@ -155,6 +179,7 @@ def move_down(board):
                 continue
             if i + 1 < len(new_col) and new_col[i] == new_col[i + 1]:
                 merged_col.append(new_col[i] * 2)
+                score += new_col[i] * 2
                 skip = True
             else:
                 merged_col.append(new_col[i])
@@ -162,9 +187,9 @@ def move_down(board):
         merged_col += [0] * (size - len(merged_col))
         for row in range(size):
             board[size - 1 - row][col] = merged_col[row]
-    return board
+    return board, score
 
-def move_left(board):
+def move_left(board, score):
     size = len(board)
     for row in range(size):
         # Compact the row
@@ -178,15 +203,16 @@ def move_left(board):
                 continue
             if i + 1 < len(new_row) and new_row[i] == new_row[i + 1]:
                 merged_row.append(new_row[i] * 2)
+                score += new_row[i] * 2
                 skip = True
             else:
                 merged_row.append(new_row[i])
         # Fill the remaining spaces with zeros
         merged_row += [0] * (size - len(merged_row))
         board[row] = merged_row
-    return board
+    return board, score
 
-def move_right(board):
+def move_right(board, score):
     size = len(board)
     for row in range(size):
         # Compact the row in reverse (right to left)
@@ -200,13 +226,14 @@ def move_right(board):
                 continue
             if i + 1 < len(new_row) and new_row[i] == new_row[i + 1]:
                 merged_row.append(new_row[i] * 2)
+                score += new_row[i] * 2
                 skip = True
             else:
                 merged_row.append(new_row[i])
         # Fill the remaining spaces with zeros, reverse before placing back
         merged_row += [0] * (size - len(merged_row))
         board[row] = merged_row[::-1]
-    return board
+    return board, score
 
 
 # main game loop
@@ -228,6 +255,13 @@ while run:
         direction = ''
         spawn_new = True
 
+    if game_over:
+        draw_over()
+        if high_score > init_high_score:
+            with open('high_score.txt', 'w') as file:
+                file.write(str(high_score))
+        init_high_score = high_score
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -240,6 +274,18 @@ while run:
                 direction = "LEFT"
             elif event.key == pygame.K_RIGHT:
                 direction = "RIGHT"
+
+        if game_over:
+            if event.key == pygame.K_RETURN:
+                board_values = [[0 for _ in range(4)] for _ in range(4)]
+                spawn_new = True
+                init_count = 0
+                score = 0
+                direction = ''
+                game_over = False
+
+    if score > high_score:
+        high_score = score
 
     pygame.display.flip()
 
