@@ -242,6 +242,17 @@ def move_right(board, global_score):
 
 # endregion MOVE FUNCTIONS
 
+
+def can_move_check(board):
+    size = len(board)
+    for i in range(size):
+        for j in range(size):
+            if i < size - 1 and board[i][j] == board[i + 1][j]:
+                return True  # Check vertical moves
+            if j < size - 1 and board[i][j] == board[i][j + 1]:
+                return True  # Check horizontal moves
+    return False
+
 # main game loop
 run = True
 while run:
