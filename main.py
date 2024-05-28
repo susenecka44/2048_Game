@@ -48,6 +48,12 @@ direction = ''
 
 score = 0
 
+try:
+    with open('high_score.txt', 'r') as file:
+        high_score = int(file.read())
+except FileNotFoundError:
+    high_score = 0
+
 # endregion VARIABLES
 def draw_board():
     pygame.draw.rect(screen, colors["bg"], board_rectangle_dimensions, board_border_width,
@@ -101,13 +107,13 @@ def spawn_piece(board):
 def move_board(board, move_direction):
     merged = [[False for _ in range(4)] for _ in range(4)]
     if move_direction == "UP":
-        board = move_up(board, merged)
+        board = move_up(board)
     elif move_direction == "DOWN":
-        board = move_down(board, merged)
+        board = move_down(board)
     elif move_direction == "LEFT":
-        board = move_left(board, merged)
+        board = move_left(board)
     elif move_direction == "RIGHT":
-        board = move_right(board, merged)
+        board = move_right(board)
     return board
 
 
@@ -125,7 +131,6 @@ def move_up(board):
                 continue
             if i + 1 < len(new_col) and new_col[i] == new_col[i + 1]:
                 merged_col.append(new_col[i] * 2)
-                score += new_col[i] * 2
                 skip = True
             else:
                 merged_col.append(new_col[i])
@@ -136,6 +141,72 @@ def move_up(board):
             board[row][col] = merged_col[row]
     return board
 
+def move_down(board):
+    size = len(board)
+    for col in range(size):
+        # Compact the column in reverse (bottom to top)
+        new_col = [tile for tile in [board[row][col] for row in range(size-1, -1, -1)] if tile != 0]
+        # Merge tiles
+        merged_col = []
+        skip = False
+        for i in range(len(new_col)):
+            if skip:
+                skip = False
+                continue
+            if i + 1 < len(new_col) and new_col[i] == new_col[i + 1]:
+                merged_col.append(new_col[i] * 2)
+                skip = True
+            else:
+                merged_col.append(new_col[i])
+        # Fill the remaining spaces with zeros, reverse before placing back
+        merged_col += [0] * (size - len(merged_col))
+        for row in range(size):
+            board[size - 1 - row][col] = merged_col[row]
+    return board
+
+def move_left(board):
+    size = len(board)
+    for row in range(size):
+        # Compact the row
+        new_row = [tile for tile in board[row] if tile != 0]
+        # Merge tiles
+        merged_row = []
+        skip = False
+        for i in range(len(new_row)):
+            if skip:
+                skip = False
+                continue
+            if i + 1 < len(new_row) and new_row[i] == new_row[i + 1]:
+                merged_row.append(new_row[i] * 2)
+                skip = True
+            else:
+                merged_row.append(new_row[i])
+        # Fill the remaining spaces with zeros
+        merged_row += [0] * (size - len(merged_row))
+        board[row] = merged_row
+    return board
+
+def move_right(board):
+    size = len(board)
+    for row in range(size):
+        # Compact the row in reverse (right to left)
+        new_row = [tile for tile in board[row] if tile != 0][::-1]
+        # Merge tiles
+        merged_row = []
+        skip = False
+        for i in range(len(new_row)):
+            if skip:
+                skip = False
+                continue
+            if i + 1 < len(new_row) and new_row[i] == new_row[i + 1]:
+                merged_row.append(new_row[i] * 2)
+                skip = True
+            else:
+                merged_row.append(new_row[i])
+        # Fill the remaining spaces with zeros, reverse before placing back
+        merged_row += [0] * (size - len(merged_row))
+        board[row] = merged_row[::-1]
+    return board
 
 
 # main game loop
