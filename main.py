@@ -775,3 +775,5 @@ if __name__ == "__main__":
     main()
 
 # endregion GAME LOOP
+
+pygame.quit()
