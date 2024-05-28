@@ -14,7 +14,6 @@ timer = pygame.time.Clock()
 fps = 60
 font = pygame.font.SysFont('Arial', 24)
 
-
 # color library
 colors = {0: (251, 248, 204),
           2: (253, 228, 207),
@@ -63,6 +62,7 @@ except FileNotFoundError:
 
 init_high_score = high_score
 
+
 # endregion VARIABLES
 def draw_board():
     pygame.draw.rect(screen, colors["bg"], board_rectangle_dimensions, board_border_width,
@@ -91,8 +91,8 @@ def draw_pieces(board):
             pygame.draw.rect(screen, color, [j * 95 + 20, i * 95 + 20, 75, 75], 0, 10)
             if value > 0:
                 value_len = len(str(value))
-                font = pygame.font.SysFont('Arial', 48 - (value_len * 5))
-                value_text = font.render(str(value), True, value_color)
+                piece_font = pygame.font.SysFont('Arial', 48 - (value_len * 5))
+                value_text = piece_font.render(str(value), True, value_color)
                 text_rect = value_text.get_rect(center=(j * 95 + 57, i * 95 + 57))
                 screen.blit(value_text, text_rect)
                 pygame.draw.rect(screen, colors["light_text"], [j * 95 + 20, i * 95 + 20, 75, 75], 2, 10)
@@ -104,6 +104,7 @@ def draw_over():
     press_enter_text = font.render("Press Enter to play again", True, colors["dark_text"])
     screen.blit(game_over_text, (130, 65))
     screen.blit(press_enter_text, (70, 105))
+
 
 def spawn_piece(board):
     # only one new piece per function call
@@ -128,7 +129,6 @@ def spawn_piece(board):
 
 def move_board(board, move_direction):
     global score
-    merged = [[False for _ in range(4)] for _ in range(4)]
     if move_direction == "UP":
         board, score = move_up(board, score)
     elif move_direction == "DOWN":
@@ -140,7 +140,8 @@ def move_board(board, move_direction):
     return board
 
 
-def move_up(board, score):
+# region MOVE FUNCTIONS
+def move_up(board, global_score):
     size = len(board)
     for col in range(size):
         # Compact the column
@@ -154,7 +155,7 @@ def move_up(board, score):
                 continue
             if i + 1 < len(new_col) and new_col[i] == new_col[i + 1]:
                 merged_col.append(new_col[i] * 2)
-                score += new_col[i] * 2
+                global_score += new_col[i] * 2
                 skip = True
             else:
                 merged_col.append(new_col[i])
@@ -163,13 +164,14 @@ def move_up(board, score):
         # Place back into the board
         for row in range(size):
             board[row][col] = merged_col[row]
-    return board, score
+    return board, global_score
 
-def move_down(board, score):
+
+def move_down(board, global_score):
     size = len(board)
     for col in range(size):
         # Compact the column in reverse (bottom to top)
-        new_col = [tile for tile in [board[row][col] for row in range(size-1, -1, -1)] if tile != 0]
+        new_col = [tile for tile in [board[row][col] for row in range(size - 1, -1, -1)] if tile != 0]
         # Merge tiles
         merged_col = []
         skip = False
@@ -179,7 +181,7 @@ def move_down(board, score):
                 continue
             if i + 1 < len(new_col) and new_col[i] == new_col[i + 1]:
                 merged_col.append(new_col[i] * 2)
-                score += new_col[i] * 2
+                global_score += new_col[i] * 2
                 skip = True
             else:
                 merged_col.append(new_col[i])
@@ -187,9 +189,10 @@ def move_down(board, score):
         merged_col += [0] * (size - len(merged_col))
         for row in range(size):
             board[size - 1 - row][col] = merged_col[row]
-    return board, score
+    return board, global_score
 
-def move_left(board, score):
+
+def move_left(board, global_score):
     size = len(board)
     for row in range(size):
         # Compact the row
@@ -203,16 +206,17 @@ def move_left(board, score):
                 continue
             if i + 1 < len(new_row) and new_row[i] == new_row[i + 1]:
                 merged_row.append(new_row[i] * 2)
-                score += new_row[i] * 2
+                global_score += new_row[i] * 2
                 skip = True
             else:
                 merged_row.append(new_row[i])
         # Fill the remaining spaces with zeros
         merged_row += [0] * (size - len(merged_row))
         board[row] = merged_row
-    return board, score
+    return board, global_score
 
-def move_right(board, score):
+
+def move_right(board, global_score):
     size = len(board)
     for row in range(size):
         # Compact the row in reverse (right to left)
@@ -226,15 +230,17 @@ def move_right(board, score):
                 continue
             if i + 1 < len(new_row) and new_row[i] == new_row[i + 1]:
                 merged_row.append(new_row[i] * 2)
-                score += new_row[i] * 2
+                global_score += new_row[i] * 2
                 skip = True
             else:
                 merged_row.append(new_row[i])
         # Fill the remaining spaces with zeros, reverse before placing back
         merged_row += [0] * (size - len(merged_row))
         board[row] = merged_row[::-1]
-    return board, score
+    return board, global_score
 
+
+# endregion MOVE FUNCTIONS
 
 # main game loop
 run = True
