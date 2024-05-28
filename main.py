@@ -5,6 +5,26 @@ pygame.init()
 
 # initialize the screen
 # region VARIABLES
+"""
+Variables used in the game
+    - window_width: int -> width of the window
+    - window_height: int -> height of the window
+    - font: pygame.font.Font -> font used in the game
+    - fps: int -> frames per second
+    - colors: dict -> dictionary with colors used in the game
+    - board_rectangle_dimensions: list -> dimensions of the board
+    - board_border_width: int -> border width of the board
+    - board_rectangle_border_radius: int -> border radius of the board
+    - game_over_rect: list -> dimensions of the game over screen
+    - board_values: list -> values of the board
+    - game_over: bool -> game over flag
+    - spawn_new: bool -> flag to spawn a new piece
+    - init_pieces_count: int -> initial pieces count
+    - direction: str -> direction of the move
+    - score: int -> score of the game
+    - high_score: int -> high score of the game
+    - init_high_score: int -> initial high score of the game
+"""
 window_width = 400
 window_height = 500
 screen = pygame.display.set_mode((window_width, window_height))
@@ -65,6 +85,9 @@ init_high_score = high_score
 
 # endregion VARIABLES
 def draw_board():
+    """
+    Draw the board on the screen using the pygame.draw.rect function
+    """
     pygame.draw.rect(screen, colors["bg"], board_rectangle_dimensions, board_border_width,
                      board_rectangle_border_radius)
 
@@ -76,6 +99,13 @@ def draw_board():
 
 
 def draw_pieces(board):
+    """
+    Draw the pieces on the board
+    Colors of the pieces are defined in the colors dictionary by numbers in it
+    Text color inside is defined by the value of the piece + font scale is adjusted based on the length of the value
+    Args:
+        board: list -> values of the board
+    """
     for i in range(len(board)):
         for j in range(len(board)):
             value = board[i][j]
@@ -99,6 +129,9 @@ def draw_pieces(board):
 
 
 def draw_over():
+    """
+    Draw the game over screen
+    """
     pygame.draw.rect(screen, colors["game_over"], game_over_rect, board_border_width, board_rectangle_border_radius)
     game_over_text = font.render("Game Over", True, colors["light_text"])
     press_enter_text = font.render("Press Enter to play again", True, colors["dark_text"])
@@ -107,6 +140,11 @@ def draw_over():
 
 
 def spawn_piece(board):
+    """
+    Spawn a new piece on the board per function call and checks if the game is over
+    Args:
+        board: list -> values of the board
+    """
     # only one new piece per function call
     count = 0
     full_board = False
@@ -128,6 +166,12 @@ def spawn_piece(board):
 
 
 def move_board(board, move_direction):
+    """
+    Move the board in the given direction
+    Args:
+        board: list -> values of the board
+        move_direction: str -> direction of the move
+    """
     global score
     if move_direction == "UP":
         board, score = move_up(board, score)
@@ -142,6 +186,15 @@ def move_board(board, move_direction):
 
 # region MOVE FUNCTIONS
 def move_up(board, global_score):
+    """
+    Move the board up and merge the tiles + update the score
+    Args:
+        board: list -> values of the board
+        global_score: int -> score of the game
+    Return:
+        board: list -> updated values of the board after move UP
+        global_score: int -> updated score of the game
+    """
     size = len(board)
     for col in range(size):
         # Compact the column
@@ -168,6 +221,15 @@ def move_up(board, global_score):
 
 
 def move_down(board, global_score):
+    """
+        Move the board down and merge the tiles + update the score
+        Args:
+            board: list -> values of the board
+            global_score: int -> score of the game
+        Return:
+            board: list -> updated values of the board after move DOWN
+            global_score: int -> updated score of the game
+    """
     size = len(board)
     for col in range(size):
         # Compact the column in reverse (bottom to top)
@@ -193,6 +255,15 @@ def move_down(board, global_score):
 
 
 def move_left(board, global_score):
+    """
+        Move the board left and merge the tiles + update the score
+        Args:
+            board: list -> values of the board
+            global_score: int -> score of the game
+        Return:
+            board: list -> updated values of the board after move LEFT
+            global_score: int -> updated score of the game
+    """
     size = len(board)
     for row in range(size):
         # Compact the row
@@ -217,6 +288,15 @@ def move_left(board, global_score):
 
 
 def move_right(board, global_score):
+    """
+        Move the board right and merge the tiles + update the score
+        Args:
+            board: list -> values of the board
+            global_score: int -> score of the game
+        Return:
+            board: list -> updated values of the board after move RIGHT
+            global_score: int -> updated score of the game
+    """
     size = len(board)
     for row in range(size):
         # Compact the row in reverse (right to left)
@@ -244,6 +324,14 @@ def move_right(board, global_score):
 
 
 def can_move_check(board):
+    """
+    Check if the board can be moved in any direction (up, down, left, right) by checking if there are any same adjacent
+    For determining if the game is over
+    Args:
+        board: list -> values of the board
+    Return:
+        bool -> True if the board can be moved in any direction, False otherwise
+    """
     size = len(board)
     for i in range(size):
         for j in range(size):
@@ -254,57 +342,125 @@ def can_move_check(board):
     return False
 
 
-# main game loop
-run = True
-while run:
-    timer.tick(fps)
-    screen.fill(colors["screen_color"])
+# main menu
+def main_menu():
+    """
+    Draw the main menu of the game with the start and exit buttons
+    """
+    menu = True
+    while menu:
+        screen.fill(colors["screen_color"])
+        # Menu Title
+        title = font.render("2048 Game", True, colors["dark_text"])
+        title_rect = title.get_rect(center=(window_width / 2, 150))
+        screen.blit(title, title_rect)
 
-    draw_board()
-    draw_pieces(board_values)
+        # Start Game Button
+        start_game_text = font.render("Start Game", True, colors["dark_text"])
+        start_game_rect = start_game_text.get_rect(center=(window_width / 2, 250))
+        screen.blit(start_game_text, start_game_rect)
 
-    if spawn_new or init_pieces_count < 2:
-        board_values, game_over = spawn_piece(board_values)
-        spawn_new = False
-        init_pieces_count += 1
+        # Exit Game Button
+        exit_game_text = font.render("Exit Game", True, colors["dark_text"])
+        exit_game_rect = exit_game_text.get_rect(center=(window_width / 2, 300))
+        screen.blit(exit_game_text, exit_game_rect)
 
-    if direction != '':
-        board_values = move_board(board_values, direction)
-        direction = ''
-        spawn_new = True
+        pygame.display.flip()
 
-    if game_over:
-        draw_over()
-        if high_score > init_high_score:
-            with open('high_score.txt', 'w') as file:
-                file.write(str(high_score))
-        init_high_score = high_score
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                menu = False
+                return False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
+                if start_game_rect.collidepoint(mouse_pos):
+                    menu = False
+                    return True
+                elif exit_game_rect.collidepoint(mouse_pos):
+                    menu = False
+                    return False
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-        if event.type == pygame.KEYUP and not game_over:
-            if event.key == pygame.K_UP:
-                direction = "UP"
-            elif event.key == pygame.K_DOWN:
-                direction = "DOWN"
-            elif event.key == pygame.K_LEFT:
-                direction = "LEFT"
-            elif event.key == pygame.K_RIGHT:
-                direction = "RIGHT"
+        timer.tick(fps)
+
+
+def return_to_menu():
+    return main_menu()
+
+
+def draw_return_button():
+    """
+    Draw the return to menu button on the game screen
+    """
+    return_text = font.render("Return to Menu", True, colors["light_text"])
+    return_rect = return_text.get_rect(center=(300, 470))
+    pygame.draw.rect(screen, colors["bg"], return_rect.inflate(20, 10))
+    screen.blit(return_text, return_rect)
+    return return_rect
+
+
+"""
+    Main game loop
+"""
+run = main_menu()
+if run:
+    while run:
+        timer.tick(fps)
+        screen.fill(colors["screen_color"])
+
+        return_rect = draw_return_button()
+
+        draw_board()
+        draw_pieces(board_values)
+
+        if spawn_new or init_pieces_count < 2:
+            board_values, game_over = spawn_piece(board_values)
+            spawn_new = False
+            init_pieces_count += 1
+
+        if direction != '':
+            board_values = move_board(board_values, direction)
+            direction = ''
+            spawn_new = True
 
         if game_over:
-            if event.key == pygame.K_RETURN:
-                board_values = [[0 for _ in range(4)] for _ in range(4)]
-                spawn_new = True
-                init_count = 0
-                score = 0
-                direction = ''
-                game_over = False
+            draw_over()
+            if high_score > init_high_score:
+                with open('high_score.txt', 'w') as file:
+                    file.write(str(high_score))
+            init_high_score = high_score
 
-    if score > high_score:
-        high_score = score
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
 
-    pygame.display.flip()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if return_rect.collidepoint(event.pos):
+                    run = return_to_menu()
+                    if not run:
+                        break
+
+            if event.type == pygame.KEYUP and not game_over:
+                if event.key == pygame.K_UP:
+                    direction = "UP"
+                elif event.key == pygame.K_DOWN:
+                    direction = "DOWN"
+                elif event.key == pygame.K_LEFT:
+                    direction = "LEFT"
+                elif event.key == pygame.K_RIGHT:
+                    direction = "RIGHT"
+
+            if game_over:
+                if event.key == pygame.K_RETURN:
+                    board_values = [[0 for _ in range(4)] for _ in range(4)]
+                    spawn_new = True
+                    init_count = 0
+                    score = 0
+                    direction = ''
+                    game_over = False
+
+        if score > high_score:
+            high_score = score
+
+        pygame.display.flip()
 
 pygame.quit()
