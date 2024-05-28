@@ -355,20 +355,25 @@ def can_move_check(board):
 # main menu
 def main_menu():
     """
-    Draw the main menu of the game with the start and exit buttons
+        Draw the main menu of the game with the start, tutorial, and exit buttons
     """
     menu = True
     while menu:
         screen.fill(colors["screen_color"])
         # Menu Title
         title = font.render("2048 Game", True, colors["dark_text"])
-        title_rect = title.get_rect(center=(window_width / 2, 150))
+        title_rect = title.get_rect(center=(window_width / 2, 100))
         screen.blit(title, title_rect)
 
         # Start Game Button
         start_game_text = font.render("Start Game", True, colors["dark_text"])
-        start_game_rect = start_game_text.get_rect(center=(window_width / 2, 250))
+        start_game_rect = start_game_text.get_rect(center=(window_width / 2, 200))
         screen.blit(start_game_text, start_game_rect)
+
+        # Tutorial Button
+        tutorial_text = font.render("Tutorial", True, colors["dark_text"])
+        tutorial_rect = tutorial_text.get_rect(center=(window_width / 2, 250))
+        screen.blit(tutorial_text, tutorial_rect)
 
         # Exit Game Button
         exit_game_text = font.render("Exit Game", True, colors["dark_text"])
@@ -377,24 +382,66 @@ def main_menu():
 
         pygame.display.flip()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        for menu_event in pygame.event.get():
+            if menu_event.type == pygame.QUIT:
                 menu = False
                 return False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = event.pos
+            if menu_event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = menu_event.pos
                 if start_game_rect.collidepoint(mouse_pos):
                     menu = False
                     return True
+                elif tutorial_rect.collidepoint(mouse_pos):
+                    show_tutorial()  # This function will display the tutorial
                 elif exit_game_rect.collidepoint(mouse_pos):
                     menu = False
                     return False
 
         timer.tick(fps)
 
+    return False
+
 
 def return_to_menu():
     return main_menu()
+
+
+def show_tutorial():
+    """
+    Display the tutorial screen
+    """
+    tutorial_running = True
+    while tutorial_running:
+        screen.fill(colors["screen_color"])
+        instructions = [
+            "How to Play 2048:",
+            "Use your arrow keys to move the tiles.",
+            "Tiles with the same number merge into one when they touch.",
+            "Add them up to reach 2048! AND BEYOND!"
+        ]
+
+        y_offset = 150
+        tutorial_font = pygame.font.SysFont('Arial', 15)
+        for line in instructions:
+            instruction_text = tutorial_font.render(line, True, colors["dark_text"])
+            instruction_rect = instruction_text.get_rect(center=(window_width / 2, y_offset))
+            screen.blit(instruction_text, instruction_rect)
+            y_offset += 50
+
+        # Back Button
+        back_text = font.render("Back to Menu", True, colors["dark_text"])
+        back_rect = back_text.get_rect(center=(window_width / 2, 400))
+        screen.blit(back_text, back_rect)
+
+        pygame.display.flip()
+        for menu_event in pygame.event.get():
+            if menu_event.type == pygame.QUIT:
+                tutorial_running = False
+            elif menu_event.type == pygame.MOUSEBUTTONDOWN:
+                if back_rect.collidepoint(menu_event.pos):
+                    tutorial_running = False
+
+        timer.tick(fps)
 
 
 def draw_return_button():
