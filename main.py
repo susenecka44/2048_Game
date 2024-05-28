@@ -153,7 +153,7 @@ def spawn_piece(board):
     """
     # only one new piece per function call
     count = 0
-    full_board = False
+    # spawn a new piece on the board randomly
     while any(0 in row for row in board) and count < 1:
         row = random.randint(0, 3)
         col = random.randint(0, 3)
@@ -396,19 +396,17 @@ def main_menu():
 
         pygame.display.flip()
 
+        # menu events -> returns true when the game should start
         for menu_event in pygame.event.get():
             if menu_event.type == pygame.QUIT:
-                menu = False
                 return False
             if menu_event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = menu_event.pos
                 if start_game_rect.collidepoint(mouse_pos):
-                    menu = False
                     return True
                 elif tutorial_rect.collidepoint(mouse_pos):
-                    show_tutorial()  # This function will display the tutorial
+                    show_tutorial()
                 elif exit_game_rect.collidepoint(mouse_pos):
-                    menu = False
                     return False
 
         timer.tick(fps)
@@ -463,10 +461,10 @@ def draw_return_button():
     Draw the return to menu button on the game screen
     """
     return_text = font.render("Return to Menu", True, colors["light_text"])
-    return_rect = return_text.get_rect(center=(300, 470))
-    pygame.draw.rect(screen, colors["bg"], return_rect.inflate(20, 10))
-    screen.blit(return_text, return_rect)
-    return return_rect
+    return_button_rect = return_text.get_rect(center=(300, 470))
+    pygame.draw.rect(screen, colors["bg"], return_button_rect.inflate(20, 10))
+    screen.blit(return_text, return_button_rect)
+    return return_button_rect
 
 
 def draw_undo_button():
@@ -483,12 +481,13 @@ def draw_undo_button():
         undo_text_color = colors[16]
 
     undo_text = font.render(undo_text_content, True, undo_text_color)
-    undo_rect = undo_text.get_rect(center=(300, 430))
-    pygame.draw.rect(screen, colors["bg"], undo_rect.inflate(20, 10))  # Background for button
-    screen.blit(undo_text, undo_rect)
-    return undo_rect
+    undo_button_rect = undo_text.get_rect(center=(300, 430))
+    pygame.draw.rect(screen, colors["bg"], undo_button_rect.inflate(20, 10))  # Background for button
+    screen.blit(undo_text, undo_button_rect)
+    return undo_button_rect
 
 
+# region MAIN GAME LOOP
 """
     Main game loop
 """
@@ -571,3 +570,5 @@ if run:
         pygame.display.flip()
 
 pygame.quit()
+
+# endregion MAIN GAME LOOP
