@@ -136,6 +136,7 @@ init_time_high_score = timed_high_score
 run = False
 current_game_mode = None
 
+
 # endregion VARIABLES
 
 # region DRAW FUNCTIONS
@@ -782,7 +783,6 @@ def timed_game_loop():
             draw_over("Time's Up!" if remaining_time <= 0 else "Game Over")
 
         pygame.display.flip()
-
 
 
 # endregion GAME MODS
