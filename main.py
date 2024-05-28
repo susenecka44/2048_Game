@@ -82,6 +82,10 @@ except FileNotFoundError:
 
 init_high_score = high_score
 
+# return buttons
+previous_states = []
+cooldown_counter = 10
+
 
 # endregion VARIABLES
 def draw_board():
@@ -172,7 +176,13 @@ def move_board(board, move_direction):
         board: list -> values of the board
         move_direction: str -> direction of the move
     """
-    global score
+    global score, previous_states, cooldown_counter
+
+    # Save the previous state of the board if return is available
+    if cooldown_counter == 0:
+        previous_states.append([row[:] for row in board])
+
+
     if move_direction == "UP":
         board, score = move_up(board, score)
     elif move_direction == "DOWN":
@@ -398,6 +408,40 @@ def draw_return_button():
     return return_rect
 
 
+def draw_undo_button():
+    """
+        Draw the undo button on the game screen with the cooldown counter or with undo text
+        Return:
+            undo_rect: pygame.Rect -> rectangle of the undo button
+    """
+    if cooldown_counter == 0:
+        undo_text_content = "Undo Move"
+        undo_text_color = colors[2]
+    else:
+        undo_text_content = f"Cooldown: {cooldown_counter}"
+        undo_text_color = colors[16]
+
+    undo_text = font.render(undo_text_content, True, undo_text_color)
+    undo_rect = undo_text.get_rect(center=(300, 430))
+    pygame.draw.rect(screen, colors["bg"], undo_rect.inflate(20, 10))  # Background for button
+    screen.blit(undo_text, undo_rect)
+    return undo_rect
+
+
+def return_one_move():
+    """
+    Return one move back in the game by popping the last state from the previous_states list
+    Return:
+        bool -> True if the move is undone, False otherwise
+    """
+    global board_values, previous_states, cooldown_counter
+    if previous_states and cooldown_counter == 0:
+        board_values = previous_states.pop()
+        cooldown_counter = 10
+        return True
+    return False
+
+
 """
     Main game loop
 """
@@ -408,6 +452,7 @@ if run:
         screen.fill(colors["screen_color"])
 
         return_rect = draw_return_button()
+        undo_rect = draw_undo_button()
 
         draw_board()
         draw_pieces(board_values)
@@ -433,13 +478,21 @@ if run:
             if event.type == pygame.QUIT:
                 run = False
 
+            # MOUSE CLICKS
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if return_rect.collidepoint(event.pos):
                     run = return_to_menu()
                     if not run:
                         break
+                if undo_rect.collidepoint(event.pos) and cooldown_counter == 0:
+                    if return_one_move():
+                        print("Move undone.")
+                    else:
+                        print("No move to undo.")
 
+            # KEYBOARD INPUTS
             if event.type == pygame.KEYUP and not game_over:
+                cooldown_counter = max(0, cooldown_counter - 1)
                 if event.key == pygame.K_UP:
                     direction = "UP"
                 elif event.key == pygame.K_DOWN:
@@ -449,6 +502,7 @@ if run:
                 elif event.key == pygame.K_RIGHT:
                     direction = "RIGHT"
 
+            # Restart the game
             if game_over:
                 if event.key == pygame.K_RETURN:
                     board_values = [[0 for _ in range(4)] for _ in range(4)]
@@ -457,6 +511,8 @@ if run:
                     score = 0
                     direction = ''
                     game_over = False
+                    cooldown_counter = 10
+                    previous_states = []
 
         if score > high_score:
             high_score = score
