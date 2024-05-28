@@ -24,6 +24,8 @@ Variables used in the game
     - score: int -> score of the game
     - high_score: int -> high score of the game
     - init_high_score: int -> initial high score of the game
+    - counter: int -> cooldown counter for the undo button
+    - previous_states: list -> list of previous states of the board
 """
 window_width = 400
 window_height = 500
@@ -182,7 +184,6 @@ def move_board(board, move_direction):
     if cooldown_counter == 0:
         previous_states.append([row[:] for row in board])
 
-
     if move_direction == "UP":
         board, score = move_up(board, score)
     elif move_direction == "DOWN":
@@ -311,7 +312,7 @@ def move_right(board, global_score):
     for row in range(size):
         # Compact the row in reverse (right to left)
         new_row = [tile for tile in board[row] if tile != 0][::-1]
-        # Merge tiles
+        # merge tiles
         merged_row = []
         skip = False
         for i in range(len(new_row)):
@@ -324,7 +325,6 @@ def move_right(board, global_score):
                 skip = True
             else:
                 merged_row.append(new_row[i])
-        # Fill the remaining spaces with zeros, reverse before placing back
         merged_row += [0] * (size - len(merged_row))
         board[row] = merged_row[::-1]
     return board, global_score
@@ -451,9 +451,11 @@ if run:
         timer.tick(fps)
         screen.fill(colors["screen_color"])
 
+        # Draw the return and undo buttons
         return_rect = draw_return_button()
         undo_rect = draw_undo_button()
 
+        # Draw the board and pieces
         draw_board()
         draw_pieces(board_values)
 
@@ -467,13 +469,7 @@ if run:
             direction = ''
             spawn_new = True
 
-        if game_over:
-            draw_over()
-            if high_score > init_high_score:
-                with open('high_score.txt', 'w') as file:
-                    file.write(str(high_score))
-            init_high_score = high_score
-
+        # Game events(quit, mouse clicks, keyboard inputs)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -513,6 +509,14 @@ if run:
                     game_over = False
                     cooldown_counter = 10
                     previous_states = []
+
+        # Draw the game over screen and update the high score file
+        if game_over:
+            draw_over()
+            if high_score > init_high_score:
+                with open('high_score.txt', 'w') as file:
+                    file.write(str(high_score))
+            init_high_score = high_score
 
         if score > high_score:
             high_score = score
