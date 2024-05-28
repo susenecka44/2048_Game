@@ -352,6 +352,20 @@ def can_move_check(board):
     return False
 
 
+def return_one_move():
+    """
+    Return one move back in the game by popping the last state from the previous_states list
+    Return:
+        bool -> True if the move is undone, False otherwise
+    """
+    global board_values, previous_states, cooldown_counter
+    if previous_states and cooldown_counter == 0:
+        board_values = previous_states.pop()
+        cooldown_counter = 10
+        return True
+    return False
+
+
 # main menu
 def main_menu():
     """
@@ -408,7 +422,7 @@ def return_to_menu():
 
 def show_tutorial():
     """
-    Display the tutorial screen
+    Display the tutorial screen and the instructions on how to play the game
     """
     tutorial_running = True
     while tutorial_running:
@@ -473,20 +487,6 @@ def draw_undo_button():
     pygame.draw.rect(screen, colors["bg"], undo_rect.inflate(20, 10))  # Background for button
     screen.blit(undo_text, undo_rect)
     return undo_rect
-
-
-def return_one_move():
-    """
-    Return one move back in the game by popping the last state from the previous_states list
-    Return:
-        bool -> True if the move is undone, False otherwise
-    """
-    global board_values, previous_states, cooldown_counter
-    if previous_states and cooldown_counter == 0:
-        board_values = previous_states.pop()
-        cooldown_counter = 10
-        return True
-    return False
 
 
 """
