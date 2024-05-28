@@ -7,25 +7,41 @@ pygame.init()
 # region VARIABLES
 """
 Variables used in the game
-    - window_width: int -> width of the window
-    - window_height: int -> height of the window
-    - font: pygame.font.Font -> font used in the game
+    - window_width: int -> width of the game window
+    - window_height: int -> height of the game window
+    
+    - timer: pygame.time.Clock -> timer for the game
     - fps: int -> frames per second
-    - colors: dict -> dictionary with colors used in the game
-    - board_rectangle_dimensions: list -> dimensions of the board
-    - board_border_width: int -> border width of the board
-    - board_rectangle_border_radius: int -> border radius of the board
-    - game_over_rect: list -> dimensions of the game over screen
+    
+    - font: pygame.font.Font -> font for the game
+    - colors: dict -> colors used in the game
+    
+    - board_rectangle_dimensions: list -> dimensions of the board rectangle
+    - board_border_width: int -> width of the board border
+    - board_rectangle_border_radius: int -> border radius of the board rectangle
+    - game_over_rect: list -> dimensions of the game over rectangle
+    
     - board_values: list -> values of the board
-    - game_over: bool -> game over flag
-    - spawn_new: bool -> flag to spawn a new piece
+    
+    - game_over: bool -> game over status
+    - spawn_new: bool -> spawn new piece status
+    
     - init_pieces_count: int -> initial pieces count
     - direction: str -> direction of the move
+    
     - score: int -> score of the game
     - high_score: int -> high score of the game
-    - init_high_score: int -> initial high score of the game
-    - counter: int -> cooldown counter for the undo button
-    - previous_states: list -> list of previous states of the board
+    - init_high_score: int -> initial high score
+    - timed_score: int -> score of the timed game
+    - timed_high_score: int -> high score of the timed game
+    - init_time_high_score: int -> initial high score of the timed game
+    
+    - cooldown_counter: int -> cooldown counter for the undo button
+    - previous_states: list -> previous states of the board
+    
+    - run: bool -> run status of the game
+    
+    - start_time: int -> start time of the timed game
 """
 window_width = 400
 window_height = 500
@@ -96,6 +112,8 @@ try:
 except FileNotFoundError:
     timed_high_score = 0
 init_time_high_score = timed_high_score
+
+run = False
 
 
 # endregion VARIABLES
@@ -268,13 +286,12 @@ def return_one_move():
 
 def reset_game_data():
     """
-    Restart the game
+    Restart the game -> resets game values
     """
     global board_values, spawn_new, init_pieces_count, score, direction, game_over, cooldown_counter, previous_states
 
     board_values = [[0 for _ in range(4)] for _ in range(4)]
     spawn_new = True
-    init_count = 0
     score = 0
     direction = ''
     game_over = False
@@ -284,7 +301,7 @@ def reset_game_data():
 
 def reset_timed_game_data():
     """
-    Restart the timed game
+    Restart the timed game -> resets game values + timed game values
     """
     global start_time, timed_score
 
@@ -482,27 +499,33 @@ def main_menu():
         title_rect = title.get_rect(center=(window_width / 2, 100))
         screen.blit(title, title_rect)
 
+        # Start Classic Game
         start_game_text = font.render("Classic Mode", True, colors["dark_text"])
         start_game_rect = start_game_text.get_rect(center=(window_width / 2, 200))
         screen.blit(start_game_text, start_game_rect)
 
+        # Start Timed Game
         timed_game_text = font.render("Timed Mode", True, colors["dark_text"])
         timed_game_rect = timed_game_text.get_rect(center=(window_width / 2, 250))
         screen.blit(timed_game_text, timed_game_rect)
 
+        # Display Tutorial
         tutorial_text = font.render("Tutorial", True, colors["dark_text"])
         tutorial_rect = tutorial_text.get_rect(center=(window_width / 2, 300))
         screen.blit(tutorial_text, tutorial_rect)
 
+        # Exit Game
         exit_game_text = font.render("Exit Game", True, colors["dark_text"])
         exit_game_rect = exit_game_text.get_rect(center=(window_width / 2, 350))
         screen.blit(exit_game_text, exit_game_rect)
 
         pygame.display.flip()
 
+        # Handle all user input events in menu
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return False
+                pygame.quit()
+                return None
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = event.pos
                 if start_game_rect.collidepoint(mouse_pos):
@@ -512,7 +535,8 @@ def main_menu():
                 elif tutorial_rect.collidepoint(mouse_pos):
                     show_tutorial()
                 elif exit_game_rect.collidepoint(mouse_pos):
-                    return False
+                    pygame.quit()
+                    return None
 
         timer.tick(fps)
 
@@ -563,9 +587,14 @@ def show_tutorial():
 
 # endregion MAIN MENU
 
-# region GAME EVENT/INTERACTION HANDLERS
+# region GAME HANDLERS
 
 def handle_game_events(game_type='classic'):
+    """
+    Check the game events and handle them correctly based on the game type
+    Args:
+        game_type: str -> type of the game (classic or timed)
+    """
     global run, direction, spawn_new, game_over, cooldown_counter
 
     for event in pygame.event.get():
@@ -588,19 +617,30 @@ def handle_game_events(game_type='classic'):
 
 
 def handle_mouse_button(mouse_button_event):
+    """
+    Handle the mouse button events for the game
+    Args:
+        mouse_button_event: pygame.event -> key press event on which the function decides what to do next
+    """
     global run
 
     if return_rect.collidepoint(mouse_button_event.pos):
-        run = return_to_menu()
-        if not run:
-            pygame.quit()
+        run = False
 
     if undo_rect.collidepoint(mouse_button_event.pos) and cooldown_counter == 0:
         return_one_move()
 
 
 def handle_key_press(key_press_event):
-    global direction, game_over
+    """
+    Handle the key press events for the game
+    Args:
+        key_press_event: pygame.event -> key press event on which the function decides what to do next
+    """
+    global direction, game_over, run
+
+    if key_press_event.key == pygame.K_ESCAPE:
+        run = False
 
     if not game_over:
         if key_press_event.key == pygame.K_UP:
@@ -617,6 +657,9 @@ def handle_key_press(key_press_event):
 
 # region GAME MODS
 def classic_game_loop():
+    """
+    Main game loop for the classic mode
+    """
     global run, spawn_new, direction, game_over, board_values, init_pieces_count, score, high_score, init_high_score, \
         return_rect, undo_rect, cooldown_counter
     while run:
@@ -658,12 +701,14 @@ def classic_game_loop():
 
 
 def timed_game_loop():
+    """
+    Main game loop for the timed mode
+    """
     global run, spawn_new, direction, game_over, board_values, init_pieces_count, timed_score, timed_high_score, \
         init_time_high_score, return_rect, undo_rect, start_time, cooldown_counter
 
     time_limit = 3  # seconds
     start_time = pygame.time.get_ticks()
-    cooldown_last_updated = pygame.time.get_ticks()
 
     while run:
         current_time = pygame.time.get_ticks()
@@ -694,8 +739,6 @@ def timed_game_loop():
 
         handle_game_events('timed')
 
-        current_time = pygame.time.get_ticks()
-
         # Draw the game over screen and update the high score file
         if remaining_time <= 0 or game_over:
             game_over = True
@@ -713,90 +756,22 @@ def timed_game_loop():
 
 # endregion GAME MODS
 
-
 # region GAME LOOP
-"""
-    Main game loop
-"""
-game_mode = main_menu()
-if game_mode == 'classic':
-    run = True
-    classic_game_loop()
-elif game_mode == 'timed':
-    run = True
-    timed_game_loop()
+def main():
+    """
+    Run the main menu and the game loop based on the user's choice
+    """
+    global run
+    run = main_menu()
+    while run is not None and run is not False:
+        if run == 'classic':
+            classic_game_loop()
+        elif run == 'timed':
+            timed_game_loop()
+        run = main_menu()
+
+
+if __name__ == "__main__":
+    main()
+
 # endregion GAME LOOP
-"""
-run = main_menu()
-if run:
-    while run:
-        timer.tick(fps)
-        screen.fill(colors["screen_color"])
-
-        # Draw the return and undo buttons
-        return_rect = draw_return_button()
-        undo_rect = draw_undo_button()
-
-        # Draw the board and pieces
-        draw_board()
-        draw_pieces(board_values)
-
-        if spawn_new or init_pieces_count < 2:
-            board_values, game_over = spawn_piece(board_values)
-            spawn_new = False
-            init_pieces_count += 1
-
-        if direction != '':
-            board_values = move_board(board_values, direction)
-            direction = ''
-            spawn_new = True
-
-        # Game events(quit, mouse clicks, keyboard inputs)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-
-            # MOUSE CLICKS
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if return_rect.collidepoint(event.pos):
-                    run = return_to_menu()
-                    if not run:
-                        break
-                if undo_rect.collidepoint(event.pos) and cooldown_counter == 0:
-                    if return_one_move():
-                        print("Move undone.")
-                    else:
-                        print("No move to undo.")
-
-            # KEYBOARD INPUTS
-            if event.type == pygame.KEYUP and not game_over:
-                cooldown_counter = max(0, cooldown_counter - 1)
-                if event.key == pygame.K_UP:
-                    direction = "UP"
-                elif event.key == pygame.K_DOWN:
-                    direction = "DOWN"
-                elif event.key == pygame.K_LEFT:
-                    direction = "LEFT"
-                elif event.key == pygame.K_RIGHT:
-                    direction = "RIGHT"
-
-            # Restart the game
-            if game_over:
-                if event.key == pygame.K_RETURN:
-                    reset_game_data()
-
-        # Draw the game over screen and update the high score file
-        if game_over:
-            draw_over()
-            if high_score > init_high_score:
-                with open('high_score.txt', 'w') as file:
-                    file.write(str(high_score))
-            init_high_score = high_score
-
-        if score > high_score:
-            high_score = score
-
-        pygame.display.flip()
-
-pygame.quit()
-"""
