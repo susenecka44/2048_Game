@@ -90,7 +90,7 @@ cooldown_counter = 10
 
 # endregion VARIABLES
 
-# region GAME LOGIC FUNCTIONS
+# region DRAW FUNCTIONS
 def draw_board():
     """
     Draw the board on the screen using the pygame.draw.rect function
@@ -147,6 +147,55 @@ def draw_over(end_text="Game Over"):
     screen.blit(game_over_text, (130, 65))
     screen.blit(press_enter_text, (70, 105))
 
+
+def draw_timer(remaining_time):
+    """
+    Display the remaining time on the game screen
+    """
+    minutes = int(remaining_time // 60)
+    seconds = int(remaining_time % 60)
+    time_text = font.render(f"Time: {minutes:02}:{seconds:02}", True, colors["light_text"])
+    time_rect = time_text.get_rect(center=(window_width - 100, 30))
+    pygame.draw.rect(screen, colors["bg"], time_rect.inflate(20, 10))
+    screen.blit(time_text, time_rect)
+
+
+# region DRAW BUTTONS
+def draw_return_button():
+    """
+    Draw the return to menu button on the game screen
+    """
+    return_text = font.render("Return to Menu", True, colors["light_text"])
+    return_button_rect = return_text.get_rect(center=(300, 470))
+    pygame.draw.rect(screen, colors["bg"], return_button_rect.inflate(20, 10))
+    screen.blit(return_text, return_button_rect)
+    return return_button_rect
+
+
+def draw_undo_button():
+    """
+        Draw the undo button on the game screen with the cooldown counter or with undo text
+        Return:
+            undo_rect: pygame.Rect -> rectangle of the undo button
+    """
+    if cooldown_counter == 0:
+        undo_text_content = "Undo Move"
+        undo_text_color = colors[2]
+    else:
+        undo_text_content = f"Cooldown: {cooldown_counter}"
+        undo_text_color = colors[16]
+
+    undo_text = font.render(undo_text_content, True, undo_text_color)
+    undo_button_rect = undo_text.get_rect(center=(300, 430))
+    pygame.draw.rect(screen, colors["bg"], undo_button_rect.inflate(20, 10))  # Background for button
+    screen.blit(undo_text, undo_button_rect)
+    return undo_button_rect
+
+
+# endregion DRAW BUTTONS
+# endregion DRAW FUNCTIONS
+
+# region GAME LOGIC FUNCTIONS
 
 def spawn_piece(board):
     """
@@ -221,6 +270,8 @@ def reset_game_data():
     cooldown_counter = 10
     previous_states = []
 
+
+# endregion GAME LOGIC FUNCTIONS
 
 # region MOVE FUNCTIONS
 def move_board(board, move_direction):
@@ -383,46 +434,45 @@ def move_right(board, global_score):
 
 # endregion MOVE FUNCTIONS
 
-# endregion GAME LOGIC FUNCTIONS
-
 # region MAIN MENU
 def main_menu():
     """
-        Draw the main menu of the game with the start, tutorial, and exit buttons
+    Draw the main menu of the game with the start, timed mode, tutorial, and exit buttons
     """
     menu = True
     while menu:
         screen.fill(colors["screen_color"])
-        # Menu Title
         title = font.render("2048 Game", True, colors["dark_text"])
         title_rect = title.get_rect(center=(window_width / 2, 100))
         screen.blit(title, title_rect)
 
-        # Start Game Button
-        start_game_text = font.render("Start Game", True, colors["dark_text"])
+        start_game_text = font.render("Classic Mode", True, colors["dark_text"])
         start_game_rect = start_game_text.get_rect(center=(window_width / 2, 200))
         screen.blit(start_game_text, start_game_rect)
 
-        # Tutorial Button
+        timed_game_text = font.render("Timed Mode", True, colors["dark_text"])
+        timed_game_rect = timed_game_text.get_rect(center=(window_width / 2, 250))
+        screen.blit(timed_game_text, timed_game_rect)
+
         tutorial_text = font.render("Tutorial", True, colors["dark_text"])
-        tutorial_rect = tutorial_text.get_rect(center=(window_width / 2, 250))
+        tutorial_rect = tutorial_text.get_rect(center=(window_width / 2, 300))
         screen.blit(tutorial_text, tutorial_rect)
 
-        # Exit Game Button
         exit_game_text = font.render("Exit Game", True, colors["dark_text"])
-        exit_game_rect = exit_game_text.get_rect(center=(window_width / 2, 300))
+        exit_game_rect = exit_game_text.get_rect(center=(window_width / 2, 350))
         screen.blit(exit_game_text, exit_game_rect)
 
         pygame.display.flip()
 
-        # menu events -> returns true when the game should start
-        for menu_event in pygame.event.get():
-            if menu_event.type == pygame.QUIT:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 return False
-            if menu_event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = menu_event.pos
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
                 if start_game_rect.collidepoint(mouse_pos):
-                    return True
+                    return 'classic'
+                elif timed_game_rect.collidepoint(mouse_pos):
+                    return 'timed'
                 elif tutorial_rect.collidepoint(mouse_pos):
                     show_tutorial()
                 elif exit_game_rect.collidepoint(mouse_pos):
@@ -477,43 +527,154 @@ def show_tutorial():
 
 # endregion MAIN MENU
 
-# region DRAW BUTTONS
-def draw_return_button():
-    """
-    Draw the return to menu button on the game screen
-    """
-    return_text = font.render("Return to Menu", True, colors["light_text"])
-    return_button_rect = return_text.get_rect(center=(300, 470))
-    pygame.draw.rect(screen, colors["bg"], return_button_rect.inflate(20, 10))
-    screen.blit(return_text, return_button_rect)
-    return return_button_rect
+# region GAME EVENT/INTERACTION HANDLERS
+
+def handle_game_events():
+    global run, direction, spawn_new, game_over
+    for game_event in pygame.event.get():
+        if game_event.type == pygame.QUIT:
+            run = False
+        elif game_event.type == pygame.MOUSEBUTTONDOWN:
+            handle_mouse_button(game_event)
+        elif game_event.type == pygame.KEYUP:
+            handle_key_press(game_event)
+        if game_over and game_event.key == pygame.K_RETURN:
+            reset_game_data()
 
 
-def draw_undo_button():
-    """
-        Draw the undo button on the game screen with the cooldown counter or with undo text
-        Return:
-            undo_rect: pygame.Rect -> rectangle of the undo button
-    """
-    if cooldown_counter == 0:
-        undo_text_content = "Undo Move"
-        undo_text_color = colors[2]
-    else:
-        undo_text_content = f"Cooldown: {cooldown_counter}"
-        undo_text_color = colors[16]
-
-    undo_text = font.render(undo_text_content, True, undo_text_color)
-    undo_button_rect = undo_text.get_rect(center=(300, 430))
-    pygame.draw.rect(screen, colors["bg"], undo_button_rect.inflate(20, 10))  # Background for button
-    screen.blit(undo_text, undo_button_rect)
-    return undo_button_rect
+def handle_mouse_button(mouse_button_event):
+    # Example: Handling mouse clicks on UI buttons
+    global run
+    if return_rect.collidepoint(mouse_button_event.pos):
+        run = return_to_menu()
+        if not run:
+            pygame.quit()
+    if undo_rect.collidepoint(mouse_button_event.pos) and cooldown_counter == 0:
+        return_one_move()
 
 
-# endregion DRAW BUTTONS
+def handle_key_press(key_press_event):
+    global direction, game_over
+    if not game_over:
+        if key_press_event.key == pygame.K_UP:
+            direction = "UP"
+        elif key_press_event.key == pygame.K_DOWN:
+            direction = "DOWN"
+        elif key_press_event.key == pygame.K_LEFT:
+            direction = "LEFT"
+        elif key_press_event.key == pygame.K_RIGHT:
+            direction = "RIGHT"
+
+
+# endregion GAME EVENT HANDLERS
+
+# region GAME MODS
+def classic_game_loop():
+    global run, spawn_new, direction, game_over, board_values, init_pieces_count, score, high_score, init_high_score, \
+        return_rect, undo_rect
+    while run:
+        timer.tick(fps)
+        screen.fill(colors["screen_color"])
+
+        # Draw the return and undo buttons
+        return_rect = draw_return_button()
+        undo_rect = draw_undo_button()
+
+        # Draw the board and pieces
+        draw_board()
+        draw_pieces(board_values)
+
+        if spawn_new or init_pieces_count < 2:
+            board_values, game_over = spawn_piece(board_values)
+            spawn_new = False
+            init_pieces_count += 1
+
+        if direction != '':
+            board_values = move_board(board_values, direction)
+            direction = ''
+            spawn_new = True
+
+        handle_game_events()
+
+        # Draw the game over screen and update the high score file
+        if game_over:
+            draw_over()
+            if high_score > init_high_score:
+                with open('high_score.txt', 'w') as highscore_file:
+                    highscore_file.write(str(high_score))
+            init_high_score = high_score
+
+        if score > high_score:
+            high_score = score
+
+        pygame.display.flip()
+
+
+def timed_game_loop():
+    global run, spawn_new, direction, game_over, board_values, init_pieces_count, score, high_score, init_high_score, \
+        return_rect, undo_rect
+
+    time_limit = 300  # seconds
+    start_time = pygame.time.get_ticks()
+
+    while run:
+        current_time = pygame.time.get_ticks()
+        elapsed_time = (current_time - start_time) / 1000  # convert milliseconds to seconds
+        remaining_time = max(time_limit - elapsed_time, 0)
+
+        timer.tick(fps)
+        screen.fill(colors["screen_color"])
+
+        # Draw the return and undo buttons
+        return_rect = draw_return_button()
+        undo_rect = draw_undo_button()
+
+        # Draw the board and pieces
+        draw_board()
+        draw_pieces(board_values)
+        draw_timer(remaining_time)
+
+        if spawn_new or init_pieces_count < 2:
+            board_values, game_over = spawn_piece(board_values)
+            spawn_new = False
+            init_pieces_count += 1
+
+        if direction != '':
+            board_values = move_board(board_values, direction)
+            direction = ''
+            spawn_new = True
+
+        handle_game_events()
+
+        # Draw the game over screen and update the high score file
+        if remaining_time <= 0 or game_over:
+            draw_over("Time's Up!" if remaining_time <= 0 else "Game Over")
+            if high_score > init_high_score:
+                with open('high_score.txt', 'w') as highscore_file:
+                    highscore_file.write(str(high_score))
+            init_high_score = high_score
+
+        if score > high_score:
+            high_score = score
+
+        pygame.display.flip()
+
+
+# endregion GAME MODS
+
 
 # region GAME LOOP
 """
     Main game loop
+"""
+game_mode = main_menu()
+if game_mode == 'classic':
+    run = True
+    classic_game_loop()
+elif game_mode == 'timed':
+    run = True
+    timed_game_loop()
+# endregion GAME LOOP
 """
 run = main_menu()
 if run:
@@ -587,7 +748,4 @@ if run:
         pygame.display.flip()
 
 pygame.quit()
-
-
-# endregion GAME LOOP
-
+"""
