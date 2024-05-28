@@ -136,7 +136,7 @@ run = False
 # endregion VARIABLES
 
 # region DRAW FUNCTIONS
-def draw_board():
+def draw_board(game_type='classic'):
     """
     Draw the board on the screen using the pygame.draw.rect function
     """
@@ -144,10 +144,16 @@ def draw_board():
                      board_rectangle_border_radius)
 
     # Display scores
-    score_text = font.render(f"Score: {score}", True, colors['dark_text'])
-    high_score_text = font.render(f"High Score: {high_score}", True, colors['dark_text'])
-    screen.blit(score_text, (10, 410))
-    screen.blit(high_score_text, (10, 450))
+    if game_type == 'classic':
+        score_text = font.render(f"Score: {score}", True, colors['dark_text'])
+        high_score_text = font.render(f"High Score: {high_score}", True, colors['dark_text'])
+        screen.blit(score_text, (10, 410))
+        screen.blit(high_score_text, (10, 450))
+    elif game_type == 'timed':
+        score_text = font.render(f"Score: {timed_score}", True, colors['dark_text'])
+        high_score_text = font.render(f"High Score: {timed_high_score}", True, colors['dark_text'])
+        screen.blit(score_text, (10, 410))
+        screen.blit(high_score_text, (10, 450))
 
 
 def draw_pieces(board):
@@ -718,13 +724,10 @@ def classic_game_loop():
 
 
 def timed_game_loop():
-    """
-    Main game loop for the timed mode
-    """
     global run, spawn_new, direction, game_over, board_values, init_pieces_count, timed_score, timed_high_score, \
         init_time_high_score, return_rect, undo_rect, start_time, cooldown_counter
 
-    time_limit = 3  # seconds
+    time_limit = 300  # seconds
     start_time = pygame.time.get_ticks()
 
     while run:
@@ -740,7 +743,7 @@ def timed_game_loop():
         undo_rect = draw_undo_button()
 
         # Draw the board and pieces
-        draw_board()
+        draw_board('timed')
         draw_pieces(board_values)
         draw_timer(remaining_time)
 
@@ -750,25 +753,25 @@ def timed_game_loop():
             init_pieces_count += 1
 
         if direction != '':
-            board_values = move_board(board_values, direction)
+            board_values = move_board(board_values, direction, 'timed')
             direction = ''
             spawn_new = True
 
         handle_game_events('timed')
 
-        # Draw the game over screen and update the high score file
+        # Check if a new timed high score is achieved
+        if timed_score > timed_high_score:
+            timed_high_score = timed_score
+            with open('timed_high_score.txt', 'w') as timed_highscore_file:
+                timed_highscore_file.write(str(timed_high_score))
+
+        # Draw the game over screen
         if remaining_time <= 0 or game_over:
             game_over = True
             draw_over("Time's Up!" if remaining_time <= 0 else "Game Over")
-            if timed_score > init_time_high_score:
-                with open('high_score_timed.txt', 'w') as highscore_file:
-                    highscore_file.write(str(timed_high_score))
-            init_time_high_score = timed_score
-
-        if timed_score > timed_high_score:
-            timed_high_score = timed_score
 
         pygame.display.flip()
+
 
 
 # endregion GAME MODS
