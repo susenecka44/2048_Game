@@ -53,8 +53,7 @@ colors = {0: (251, 248, 204),
           "dark_text": (42, 43, 46),
           "other": (105, 153, 93),
           "bg": (42, 43, 46),
-          "screen_color": (251, 251, 251),
-          "game_over": (193, 98, 0),
+          "screen_color": (251, 251, 251)
           }
 
 # board variables definitions
@@ -136,12 +135,14 @@ def draw_pieces(board):
                 pygame.draw.rect(screen, colors["light_text"], [j * 95 + 20, i * 95 + 20, 75, 75], 2, 10)
 
 
-def draw_over():
+def draw_over(end_text="Game Over"):
     """
     Draw the game over screen
+    Args:
+        end_text: str -> text to display on the game over screen
     """
-    pygame.draw.rect(screen, colors["game_over"], game_over_rect, board_border_width, board_rectangle_border_radius)
-    game_over_text = font.render("Game Over", True, colors["light_text"])
+    pygame.draw.rect(screen, colors["other"], game_over_rect, board_border_width, board_rectangle_border_radius)
+    game_over_text = font.render(end_text, True, colors["light_text"])
     press_enter_text = font.render("Press Enter to play again", True, colors["dark_text"])
     screen.blit(game_over_text, (130, 65))
     screen.blit(press_enter_text, (70, 105))
@@ -204,6 +205,21 @@ def return_one_move():
         cooldown_counter = 10
         return True
     return False
+
+
+def reset_game_data():
+    """
+    Restart the game
+    """
+    global board_values, spawn_new, init_pieces_count, score, direction, game_over, cooldown_counter, previous_states
+    board_values = [[0 for _ in range(4)] for _ in range(4)]
+    spawn_new = True
+    init_count = 0
+    score = 0
+    direction = ''
+    game_over = False
+    cooldown_counter = 10
+    previous_states = []
 
 
 # region MOVE FUNCTIONS
@@ -495,7 +511,7 @@ def draw_undo_button():
 
 # endregion DRAW BUTTONS
 
-# region MAIN GAME LOOP
+# region GAME LOOP
 """
     Main game loop
 """
@@ -555,14 +571,7 @@ if run:
             # Restart the game
             if game_over:
                 if event.key == pygame.K_RETURN:
-                    board_values = [[0 for _ in range(4)] for _ in range(4)]
-                    spawn_new = True
-                    init_count = 0
-                    score = 0
-                    direction = ''
-                    game_over = False
-                    cooldown_counter = 10
-                    previous_states = []
+                    reset_game_data()
 
         # Draw the game over screen and update the high score file
         if game_over:
@@ -579,4 +588,6 @@ if run:
 
 pygame.quit()
 
-# endregion MAIN GAME LOOP
+
+# endregion GAME LOOP
+
