@@ -1,9 +1,26 @@
 import pygame
 import random
 
+"""
+---------------------------------------------------------------------   
+    This is a 2048 game implementation using Pygame library
+---------------------------------------------------------------------
+    - The game has two modes: Classic and Timed
+    - Classic mode: The player can play the game without any time limit
+    - Timed mode: The player has a time limit of 3 minutes to play the game
+    - The player can undo the last move with a cooldown of 10 moves
+    - The player can return to the main menu at any time
+    - The game has a high score system for both modes
+    - The game has a tutorial screen to explain the rules of the game
+
+Author: Julie Vondráčková
+Date: 28-5-2024
+* Done for the Programming in Python course at Charles University 
+---------------------------------------------------------------------
+"""
+
 pygame.init()
 
-# initialize the screen
 # region VARIABLES
 """
 Variables used in the game
