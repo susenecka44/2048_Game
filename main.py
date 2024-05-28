@@ -90,6 +90,8 @@ cooldown_counter = 10
 
 
 # endregion VARIABLES
+
+# region GAME LOGIC FUNCTIONS
 def draw_board():
     """
     Draw the board on the screen using the pygame.draw.rect function
@@ -171,6 +173,40 @@ def spawn_piece(board):
     return board, False  # game not over
 
 
+def can_move_check(board):
+    """
+    Check if the board can be moved in any direction (up, down, left, right) by checking if there are any same adjacent
+    For determining if the game is over
+    Args:
+        board: list -> values of the board
+    Return:
+        bool -> True if the board can be moved in any direction, False otherwise
+    """
+    size = len(board)
+    for i in range(size):
+        for j in range(size):
+            if i < size - 1 and board[i][j] == board[i + 1][j]:
+                return True  # Check vertical moves
+            if j < size - 1 and board[i][j] == board[i][j + 1]:
+                return True  # Check horizontal moves
+    return False
+
+
+def return_one_move():
+    """
+    Return one move back in the game by popping the last state from the previous_states list
+    Return:
+        bool -> True if the move is undone, False otherwise
+    """
+    global board_values, previous_states, cooldown_counter
+    if previous_states and cooldown_counter == 0:
+        board_values = previous_states.pop()
+        cooldown_counter = 10
+        return True
+    return False
+
+
+# region MOVE FUNCTIONS
 def move_board(board, move_direction):
     """
     Move the board in the given direction
@@ -195,7 +231,6 @@ def move_board(board, move_direction):
     return board
 
 
-# region MOVE FUNCTIONS
 def move_up(board, global_score):
     """
     Move the board up and merge the tiles + update the score
@@ -332,41 +367,9 @@ def move_right(board, global_score):
 
 # endregion MOVE FUNCTIONS
 
+# endregion GAME LOGIC FUNCTIONS
 
-def can_move_check(board):
-    """
-    Check if the board can be moved in any direction (up, down, left, right) by checking if there are any same adjacent
-    For determining if the game is over
-    Args:
-        board: list -> values of the board
-    Return:
-        bool -> True if the board can be moved in any direction, False otherwise
-    """
-    size = len(board)
-    for i in range(size):
-        for j in range(size):
-            if i < size - 1 and board[i][j] == board[i + 1][j]:
-                return True  # Check vertical moves
-            if j < size - 1 and board[i][j] == board[i][j + 1]:
-                return True  # Check horizontal moves
-    return False
-
-
-def return_one_move():
-    """
-    Return one move back in the game by popping the last state from the previous_states list
-    Return:
-        bool -> True if the move is undone, False otherwise
-    """
-    global board_values, previous_states, cooldown_counter
-    if previous_states and cooldown_counter == 0:
-        board_values = previous_states.pop()
-        cooldown_counter = 10
-        return True
-    return False
-
-
-# main menu
+# region MAIN MENU
 def main_menu():
     """
         Draw the main menu of the game with the start, tutorial, and exit buttons
@@ -456,6 +459,9 @@ def show_tutorial():
         timer.tick(fps)
 
 
+# endregion MAIN MENU
+
+# region DRAW BUTTONS
 def draw_return_button():
     """
     Draw the return to menu button on the game screen
@@ -486,6 +492,8 @@ def draw_undo_button():
     screen.blit(undo_text, undo_button_rect)
     return undo_button_rect
 
+
+# endregion DRAW BUTTONS
 
 # region MAIN GAME LOOP
 """
