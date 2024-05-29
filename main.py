@@ -112,7 +112,7 @@ direction = ''
 score = 0
 
 try:
-    with open('high_score.txt', 'r') as file:
+    with open('score_files/high_score.txt', 'r') as file:
         high_score = int(file.read())
 except FileNotFoundError:
     high_score = 0
@@ -127,7 +127,7 @@ cooldown_counter = 10
 start_time = pygame.time.get_ticks()
 timed_score = 0
 try:
-    with open('timed_high_score.txt', 'r') as file:
+    with open('score_files/timed_high_score.txt', 'r') as file:
         timed_high_score = int(file.read())
 except FileNotFoundError:
     timed_high_score = 0
@@ -136,8 +136,21 @@ init_time_high_score = timed_high_score
 run = False
 current_game_mode = None
 
+# UI - sounds
+pygame.mixer.init()
+move_sound = pygame.mixer.Sound('sounds/move.mp3')
+mouse_click_sound = pygame.mixer.Sound('sounds/button_click.mp3')
+
 
 # endregion VARIABLES
+
+# region ADDITIONS
+
+def play_sound(sound):
+    pygame.mixer.Sound.play(sound)
+
+
+# endregion ADDITIONS
 
 # region DRAW FUNCTIONS
 def draw_board(game_type='classic'):
@@ -356,6 +369,8 @@ def move_board(board, move_direction, game_type='classic'):
     else:
         cooldown_counter = max(0, cooldown_counter - 1)
 
+    play_sound(move_sound)
+
     if game_type == 'classic':
         if move_direction == "UP":
             board, score = move_up(board, score)
@@ -556,6 +571,7 @@ def main_menu():
                 pygame.quit()
                 return None, False
             if event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
                 mouse_pos = event.pos
                 new_mode = None
                 if start_game_rect.collidepoint(mouse_pos):
@@ -637,6 +653,7 @@ def handle_game_events(game_type='classic'):
             run = False
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            play_sound(mouse_click_sound)
             handle_mouse_button(event)
 
         elif event.type == pygame.KEYDOWN:
@@ -725,7 +742,7 @@ def classic_game_loop():
         if game_over:
             draw_over()
             if high_score > init_high_score:
-                with open('high_score.txt', 'w') as highscore_file:
+                with open('score_files/high_score.txt', 'w') as highscore_file:
                     highscore_file.write(str(high_score))
             init_high_score = high_score
 
@@ -774,7 +791,7 @@ def timed_game_loop():
         # Check if a new timed high score is achieved
         if timed_score > timed_high_score:
             timed_high_score = timed_score
-            with open('timed_high_score.txt', 'w') as timed_highscore_file:
+            with open('score_files/timed_high_score.txt', 'w') as timed_highscore_file:
                 timed_highscore_file.write(str(timed_high_score))
 
         # Draw the game over screen
