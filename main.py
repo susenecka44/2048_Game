@@ -1,6 +1,7 @@
 import pygame
-import random
+import random  # for random piece spawning
 import webbrowser  # for opening links in menu
+import json  # for reading the user data
 
 """
 ---------------------------------------------------------------------   
@@ -220,8 +221,47 @@ mouse_click_sound = pygame.mixer.Sound('assets/sounds/button_click.mp3')
 reset_sound = pygame.mixer.Sound('assets/sounds/reset.mp3')
 sound_enabled = True
 
+json_save_file = 'assets/save_files/save.json'
+
 
 # endregion VARIABLES
+
+# region LOAD SAVE DATA
+
+def save_game_data():
+    """
+    Save the game data to the save file
+    """
+    game_data = {
+        "board_values": board_values,
+        "score": score,
+        "high_score": high_score,
+        "timed_high_score": timed_high_score,
+        "sound_enabled": sound_enabled,
+        "current_theme": current_theme
+    }
+    with open(json_save_file, 'w') as f:
+        json.dump(game_data, f, indent=4)
+
+
+def load_game_data():
+    """
+    Load the game data from the save file
+    """
+    with open(json_save_file, 'r') as f:
+        game_data = json.load(f)
+
+    global board_values, score, high_score, timed_high_score, sound_enabled, current_theme
+    board_values = game_data.get("board_values", [[0] * 4 for _ in range(4)])
+    score = game_data.get("score", 0)
+    high_score = game_data.get("high_score", 0)
+    timed_high_score = game_data.get("timed_high_score", 0)
+    sound_enabled = game_data.get("sound_enabled", True)
+    current_theme = game_data.get("current_theme", 'classic')
+    apply_theme(current_theme)
+
+
+# endregion LOAD SAVE DATA
 
 # region UI ADDITIONS
 
@@ -281,7 +321,7 @@ def extend_theme_colors(color_themes):
 
 # endregion UI ADDITIONS
 
-# region RESET HIGH SCORES
+# region RESET DATA
 def reset_high_scores():
     play_sound(reset_sound)
     are_you_sure_reset()
@@ -294,7 +334,7 @@ def are_you_sure_reset():
     confirming = True
     while confirming:
         screen.fill(colors["screen_color"])
-        confirm_text = font.render("Really reset the high scores?", True, colors["dark_text"])
+        confirm_text = font.render("Really reset the data?", True, colors["dark_text"])
         confirm_rect = confirm_text.get_rect(center=(window_width / 2, 150))
         screen.blit(confirm_text, confirm_rect)
 
@@ -324,18 +364,40 @@ def are_you_sure_reset():
 
 def perform_reset():
     """
-    Reset the high scores in the game
+    Reset the high scores in the game and save the updated scores to a JSON file.
     """
     global high_score, timed_high_score
     high_score = 0
     timed_high_score = 0
-    with open(score_file, 'w') as highscore_file:
-        highscore_file.write('0')
-    with open(timed_score_file, 'w') as timed_highscore_file:
-        timed_highscore_file.write('0')
+
+    # Assuming game_data.json is the file where all game data is stored
+    try:
+        # Load the existing data
+        with open('game_data.json', 'r') as gamedata_file:
+            data = json.load(gamedata_file)
+
+        # Update the high scores in the data
+        data['high_score'] = high_score
+        data['timed_high_score'] = timed_high_score
+
+        # Write the updated data back to the file
+        with open('game_data.json', 'w') as gamedata_file:
+            json.dump(data, gamedata_file, indent=4)
+
+        print("High scores reset successfully.")
+    except FileNotFoundError:
+        # Handle the case where the game data file does not exist
+        print("Game data file not found. Creating a new one with default values.")
+        data = {
+            "high_score": high_score,
+            "timed_high_score": timed_high_score,
+            # Include other default values as needed
+        }
+        with open('game_data.json', 'w') as gamedata_file:
+            json.dump(data, gamedata_file, indent=4)
 
 
-# endregion RESET HIGH SCORES
+# endregion RESET DATA
 
 # region DRAW FUNCTIONS
 def draw_board(game_type='classic'):
@@ -1021,7 +1083,7 @@ def settings_menu():
         sound_rect = sound_text.get_rect(center=(window_width / 2, 200))
         screen.blit(sound_text, sound_rect)
 
-        reset_scores_text = font.render("Reset High Scores", True, colors["dark_text"])
+        reset_scores_text = font.render("Reset Saves", True, colors["dark_text"])
         reset_scores_rect = reset_scores_text.get_rect(center=(window_width / 2, 250))
         screen.blit(reset_scores_text, reset_scores_rect)
 
@@ -1122,6 +1184,7 @@ def main():
     Run the main menu and the game loop based on the user's choice
     """
     global run
+    load_game_data()
     run, mode_changed = main_menu()
     while run is not None and run is not False:
         if mode_changed:
@@ -1138,6 +1201,7 @@ def main():
                 timed_game_loop()
 
         run, mode_changed = main_menu()
+    save_game_data()
 
 
 if __name__ == "__main__":

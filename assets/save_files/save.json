@@ -1,0 +1,33 @@
+{
+    "board_values": [
+        [
+            2,
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            2,
+            0,
+            0
+        ],
+        [
+            0,
+            0,
+            0,
+            0
+        ],
+        [
+            0,
+            0,
+            0,
+            0
+        ]
+    ],
+    "score": 0,
+    "high_score": 0,
+    "timed_high_score": 0,
+    "sound_enabled": true,
+    "current_theme": "classic"
+}
