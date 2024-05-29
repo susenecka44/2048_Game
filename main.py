@@ -12,6 +12,8 @@ import random
     - The player can return to the main menu at any time
     - The game has a high score system for both modes
     - The game has a tutorial screen to explain the rules of the game
+    - The game has a settings menu to change the theme and sound settings
+    - The game has four themes: Basic, Dark, Classic, and Retro
 
 Author: Julie Vondráčková
 Date: 28-5-2024
@@ -62,6 +64,12 @@ Variables used in the game
     
     - current_game_mode -> tracks the currently selected game mode
 
+    - sound_enabled: bool -> sound status
+    - move_sound: pygame.mixer.Sound -> sound for the move
+    - mouse_click_sound: pygame.mixer.Sound -> sound for the mouse click
+    
+    - themes: dict -> themes available in the game
+    - current_theme: str -> current theme of the game
 """
 window_width = 400
 window_height = 500
@@ -211,18 +219,33 @@ sound_enabled = True
 # region ADDITIONS
 
 def play_sound(sound):
+    """
+    Play a sound if the sound is enabled
+    Args:
+        sound: pygame.mixer.Sound -> sound to play
+    """
     if sound_enabled:
         pygame.mixer.Sound.play(sound)
 
 
 def apply_theme(theme):
+    """
+    Apply the selected theme to the game
+    Args:
+        theme: str -> theme name
+    """
     global colors, themes, current_theme
     current_theme = theme
     colors = themes[theme]
 
 
 def extend_theme_colors(color_themes):
-    new_values = [4096, 8192, 16384, 32768, 65536, 131072]  # Add more if needed
+    """
+    Extend the color themes with more colors for the game
+    Args:
+        color_themes: dict -> color themes for the game
+    """
+    new_values = [4096, 8192, 16384, 32768, 65536, 131072]
     for theme_name, color_scheme in color_themes.items():
         current_max_value = 2048
         for value in new_values:
@@ -628,173 +651,6 @@ def move_right(board, global_score):
 
 # endregion MOVE FUNCTIONS
 
-# region MAIN MENU
-def main_menu():
-    """
-    Draw the main menu of the game with the start, timed mode, tutorial, settings, and exit buttons
-    """
-    global current_game_mode
-
-    menu = True
-    while menu:
-        screen.fill(colors["screen_color"])
-        title = font.render("2048 Game", True, colors["dark_text"])
-        title_rect = title.get_rect(center=(window_width / 2, 100))
-        screen.blit(title, title_rect)
-
-        # Start Classic Game
-        start_game_text = font.render("Classic Mode", True, colors["dark_text"])
-        start_game_rect = start_game_text.get_rect(center=(window_width / 2, 180))
-        screen.blit(start_game_text, start_game_rect)
-
-        # Start Timed Game
-        timed_game_text = font.render("Timed Mode", True, colors["dark_text"])
-        timed_game_rect = timed_game_text.get_rect(center=(window_width / 2, 230))
-        screen.blit(timed_game_text, timed_game_rect)
-
-        # Display Tutorial
-        tutorial_text = font.render("Tutorial", True, colors["dark_text"])
-        tutorial_rect = tutorial_text.get_rect(center=(window_width / 2, 280))
-        screen.blit(tutorial_text, tutorial_rect)
-
-        # Settings
-        settings_text = font.render("Settings", True, colors["dark_text"])
-        settings_rect = settings_text.get_rect(center=(window_width / 2, 330))
-        screen.blit(settings_text, settings_rect)
-
-        # Exit Game
-        exit_game_text = font.render("Exit Game", True, colors["dark_text"])
-        exit_game_rect = exit_game_text.get_rect(center=(window_width / 2, 380))
-        screen.blit(exit_game_text, exit_game_rect)
-
-        pygame.display.flip()
-
-        # Handle all user input events in menu
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return None, False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                play_sound(mouse_click_sound)
-                mouse_pos = event.pos
-                new_mode = None
-                if start_game_rect.collidepoint(mouse_pos):
-                    new_mode = 'classic'
-                elif timed_game_rect.collidepoint(mouse_pos):
-                    new_mode = 'timed'
-                elif tutorial_rect.collidepoint(mouse_pos):
-                    show_tutorial()
-                elif settings_rect.collidepoint(mouse_pos):
-                    settings_menu()
-                elif exit_game_rect.collidepoint(mouse_pos):
-                    pygame.quit()
-                    return None, False
-
-                if new_mode:
-                    mode_changed = (new_mode != current_game_mode)
-                    current_game_mode = new_mode
-                    return new_mode, mode_changed
-
-        timer.tick(fps)
-
-    return False, False
-
-
-def return_to_menu():
-    play_sound(mouse_click_sound)
-    return main_menu()
-
-
-def show_tutorial():
-    """
-    Display the tutorial screen and the instructions on how to play the game
-    """
-    tutorial_running = True
-    while tutorial_running:
-        screen.fill(colors["screen_color"])
-        instructions = [
-            "How to Play 2048:",
-            "Use your arrow keys to move the tiles.",
-            "Tiles with the same number merge into one when they touch.",
-            "Add them up to reach 2048! AND BEYOND!"
-        ]
-
-        y_offset = 150
-        tutorial_font = pygame.font.SysFont('Arial', 15)
-        for line in instructions:
-            instruction_text = tutorial_font.render(line, True, colors["dark_text"])
-            instruction_rect = instruction_text.get_rect(center=(window_width / 2, y_offset))
-            screen.blit(instruction_text, instruction_rect)
-            y_offset += 50
-
-        # Back Button
-        back_text = font.render("Back to Menu", True, colors["dark_text"])
-        back_rect = back_text.get_rect(center=(window_width / 2, 400))
-        screen.blit(back_text, back_rect)
-
-        pygame.display.flip()
-        for menu_event in pygame.event.get():
-            if menu_event.type == pygame.QUIT:
-                tutorial_running = False
-            elif menu_event.type == pygame.MOUSEBUTTONDOWN:
-                play_sound(mouse_click_sound)
-                if back_rect.collidepoint(menu_event.pos):
-                    tutorial_running = False
-
-        timer.tick(fps)
-
-
-def settings_menu():
-    global current_theme, sound_enabled
-    settings_running = True
-    themes_available = ['basic', 'dark', 'classic', 'retro']
-    current_theme_index = themes_available.index(current_theme)  # Find the current index of the theme
-
-    while settings_running:
-        screen.fill(colors["screen_color"])
-        settings_title = font.render("Settings", True, colors["dark_text"])
-        settings_title_rect = settings_title.get_rect(center=(window_width / 2, 100))
-        screen.blit(settings_title, settings_title_rect)
-
-        # Theme selection
-        theme_text = font.render(f"Theme: {current_theme.capitalize()}", True, colors["dark_text"])
-        theme_rect = theme_text.get_rect(center=(window_width / 2, 200))
-        screen.blit(theme_text, theme_rect)
-
-        # Sound toggle
-        sound_text = font.render(f"Sound: {'On' if sound_enabled else 'Off'}", True, colors["dark_text"])
-        sound_rect = sound_text.get_rect(center=(window_width / 2, 250))
-        screen.blit(sound_text, sound_rect)
-
-        # Back to menu button
-        back_text = font.render("Back to Menu", True, colors["dark_text"])
-        back_rect = back_text.get_rect(center=(window_width / 2, 300))
-        screen.blit(back_text, back_rect)
-
-        pygame.display.flip()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                settings_running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                play_sound(mouse_click_sound)
-                mouse_pos = event.pos
-                if theme_rect.collidepoint(mouse_pos):
-                    # cycle through the themes
-                    current_theme_index = (current_theme_index + 1) % len(themes_available)
-                    current_theme = themes_available[current_theme_index]
-                    apply_theme(current_theme)
-                elif sound_rect.collidepoint(mouse_pos):
-                    sound_enabled = not sound_enabled
-                elif back_rect.collidepoint(mouse_pos):
-                    settings_running = False
-
-        timer.tick(fps)
-
-
-# endregion MAIN MENU
-
 # region GAME HANDLERS
 
 def handle_game_events(game_type='classic'):
@@ -988,6 +844,178 @@ def main():
 if __name__ == "__main__":
     main()
 
+
 # endregion GAME LOOP
+
+# region MAIN MENU
+def main_menu():
+    """
+    Draw the main menu of the game with the start, timed mode, tutorial, settings, and exit buttons
+    """
+    global current_game_mode
+
+    menu = True
+    while menu:
+        screen.fill(colors["screen_color"])
+        title = font.render("2048 Game", True, colors["dark_text"])
+        title_rect = title.get_rect(center=(window_width / 2, 100))
+        screen.blit(title, title_rect)
+
+        # Start Classic Game
+        start_game_text = font.render("Classic Mode", True, colors["dark_text"])
+        start_game_rect = start_game_text.get_rect(center=(window_width / 2, 180))
+        screen.blit(start_game_text, start_game_rect)
+
+        # Start Timed Game
+        timed_game_text = font.render("Timed Mode", True, colors["dark_text"])
+        timed_game_rect = timed_game_text.get_rect(center=(window_width / 2, 230))
+        screen.blit(timed_game_text, timed_game_rect)
+
+        # Display Tutorial
+        tutorial_text = font.render("Tutorial", True, colors["dark_text"])
+        tutorial_rect = tutorial_text.get_rect(center=(window_width / 2, 280))
+        screen.blit(tutorial_text, tutorial_rect)
+
+        # Settings
+        settings_text = font.render("Settings", True, colors["dark_text"])
+        settings_rect = settings_text.get_rect(center=(window_width / 2, 330))
+        screen.blit(settings_text, settings_rect)
+
+        # Exit Game
+        exit_game_text = font.render("Exit Game", True, colors["dark_text"])
+        exit_game_rect = exit_game_text.get_rect(center=(window_width / 2, 380))
+        screen.blit(exit_game_text, exit_game_rect)
+
+        pygame.display.flip()
+
+        # Handle all user input events in menu
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return None, False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
+                mouse_pos = event.pos
+                new_mode = None
+                if start_game_rect.collidepoint(mouse_pos):
+                    new_mode = 'classic'
+                elif timed_game_rect.collidepoint(mouse_pos):
+                    new_mode = 'timed'
+                elif tutorial_rect.collidepoint(mouse_pos):
+                    show_tutorial()
+                elif settings_rect.collidepoint(mouse_pos):
+                    settings_menu()
+                elif exit_game_rect.collidepoint(mouse_pos):
+                    pygame.quit()
+                    return None, False
+
+                if new_mode:
+                    mode_changed = (new_mode != current_game_mode)
+                    current_game_mode = new_mode
+                    return new_mode, mode_changed
+
+        timer.tick(fps)
+
+    return False, False
+
+
+def return_to_menu():
+    play_sound(mouse_click_sound)
+    return main_menu()
+
+
+def show_tutorial():
+    """
+    Display the tutorial screen and the instructions on how to play the game
+    """
+    tutorial_running = True
+    while tutorial_running:
+        screen.fill(colors["screen_color"])
+        instructions = [
+            "How to Play 2048:",
+            "Use your arrow keys to move the tiles.",
+            "Tiles with the same number merge into one when they touch.",
+            "Add them up to reach 2048! AND BEYOND!"
+        ]
+
+        y_offset = 150
+        tutorial_font = pygame.font.SysFont('Arial', 15)
+        for line in instructions:
+            instruction_text = tutorial_font.render(line, True, colors["dark_text"])
+            instruction_rect = instruction_text.get_rect(center=(window_width / 2, y_offset))
+            screen.blit(instruction_text, instruction_rect)
+            y_offset += 50
+
+        # Back Button
+        back_text = font.render("Back to Menu", True, colors["dark_text"])
+        back_rect = back_text.get_rect(center=(window_width / 2, 400))
+        screen.blit(back_text, back_rect)
+
+        pygame.display.flip()
+        for menu_event in pygame.event.get():
+            if menu_event.type == pygame.QUIT:
+                tutorial_running = False
+            elif menu_event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
+                if back_rect.collidepoint(menu_event.pos):
+                    tutorial_running = False
+
+        timer.tick(fps)
+
+
+def settings_menu():
+    """
+    Display the settings menu and allow the user to change the theme and sound settings
+    """
+    global current_theme, sound_enabled
+
+    settings_running = True
+    themes_available = ['basic', 'dark', 'classic', 'retro']
+    current_theme_index = themes_available.index(current_theme)  # Find the current index of the theme
+
+    while settings_running:
+        screen.fill(colors["screen_color"])
+        settings_title = font.render("Settings", True, colors["dark_text"])
+        settings_title_rect = settings_title.get_rect(center=(window_width / 2, 100))
+        screen.blit(settings_title, settings_title_rect)
+
+        # Theme selection
+        theme_text = font.render(f"Theme: {current_theme.capitalize()}", True, colors["dark_text"])
+        theme_rect = theme_text.get_rect(center=(window_width / 2, 200))
+        screen.blit(theme_text, theme_rect)
+
+        # Sound toggle
+        sound_text = font.render(f"Sound: {'On' if sound_enabled else 'Off'}", True, colors["dark_text"])
+        sound_rect = sound_text.get_rect(center=(window_width / 2, 250))
+        screen.blit(sound_text, sound_rect)
+
+        # Back to menu button
+        back_text = font.render("Back to Menu", True, colors["dark_text"])
+        back_rect = back_text.get_rect(center=(window_width / 2, 300))
+        screen.blit(back_text, back_rect)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                settings_running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
+                mouse_pos = event.pos
+                if theme_rect.collidepoint(mouse_pos):
+                    # cycle through the themes
+                    current_theme_index = (current_theme_index + 1) % len(themes_available)
+                    current_theme = themes_available[current_theme_index]
+                    apply_theme(current_theme)
+                elif sound_rect.collidepoint(mouse_pos):
+                    sound_enabled = not sound_enabled
+                elif back_rect.collidepoint(mouse_pos):
+                    settings_running = False
+
+        timer.tick(fps)
+
+
+# endregion MAIN MENU
 
 pygame.quit()
