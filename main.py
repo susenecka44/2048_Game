@@ -1,5 +1,6 @@
 import pygame
 import random
+import webbrowser  # for opening links in menu
 
 """
 ---------------------------------------------------------------------   
@@ -183,7 +184,7 @@ direction = ''
 score = 0
 
 try:
-    with open('score_files/high_score.txt', 'r') as file:
+    with open('assets/score_files/high_score.txt', 'r') as file:
         high_score = int(file.read())
 except FileNotFoundError:
     high_score = 0
@@ -198,7 +199,7 @@ cooldown_counter = 10
 start_time = pygame.time.get_ticks()
 timed_score = 0
 try:
-    with open('score_files/timed_high_score.txt', 'r') as file:
+    with open('assets/score_files/timed_high_score.txt', 'r') as file:
         timed_high_score = int(file.read())
 except FileNotFoundError:
     timed_high_score = 0
@@ -209,8 +210,8 @@ current_game_mode = None
 
 # UI - sounds
 pygame.mixer.init()
-move_sound = pygame.mixer.Sound('sounds/move.mp3')
-mouse_click_sound = pygame.mixer.Sound('sounds/button_click.mp3')
+move_sound = pygame.mixer.Sound('assets/sounds/move.mp3')
+mouse_click_sound = pygame.mixer.Sound('assets/sounds/button_click.mp3')
 sound_enabled = True
 
 
@@ -720,7 +721,7 @@ def handle_key_press(key_press_event):
 
 # endregion GAME EVENT HANDLERS
 
-# region GAME MODS
+# region GAME MODES
 def classic_game_loop():
     """
     Main game loop for the classic mode
@@ -755,7 +756,7 @@ def classic_game_loop():
         if game_over:
             draw_over()
             if high_score > init_high_score:
-                with open('score_files/high_score.txt', 'w') as highscore_file:
+                with open('assets/score_files/high_score.txt', 'w') as highscore_file:
                     highscore_file.write(str(high_score))
             init_high_score = high_score
 
@@ -804,7 +805,7 @@ def timed_game_loop():
         # Check if a new timed high score is achieved
         if timed_score > timed_high_score:
             timed_high_score = timed_score
-            with open('score_files/timed_high_score.txt', 'w') as timed_highscore_file:
+            with open('assets/score_files/timed_high_score.txt', 'w') as timed_highscore_file:
                 timed_highscore_file.write(str(timed_high_score))
 
         # Draw the game over screen
@@ -815,37 +816,7 @@ def timed_game_loop():
         pygame.display.flip()
 
 
-# endregion GAME MODS
-
-# region GAME LOOP
-def main():
-    """
-    Run the main menu and the game loop based on the user's choice
-    """
-    global run
-    run, mode_changed = main_menu()
-    while run is not None and run is not False:
-        if mode_changed:
-            if run == 'classic':
-                reset_game_data()
-                classic_game_loop()
-            elif run == 'timed':
-                reset_timed_game_data()
-                timed_game_loop()
-        else:
-            if run == 'classic':
-                classic_game_loop()
-            elif run == 'timed':
-                timed_game_loop()
-
-        run, mode_changed = main_menu()
-
-
-if __name__ == "__main__":
-    main()
-
-
-# endregion GAME LOOP
+# endregion GAME MODES
 
 # region MAIN MENU
 def main_menu():
@@ -964,14 +935,11 @@ def show_tutorial():
 
 
 def settings_menu():
-    """
-    Display the settings menu and allow the user to change the theme and sound settings
-    """
     global current_theme, sound_enabled
 
     settings_running = True
     themes_available = ['basic', 'dark', 'classic', 'retro']
-    current_theme_index = themes_available.index(current_theme)  # Find the current index of the theme
+    current_theme_index = themes_available.index(current_theme)
 
     while settings_running:
         screen.fill(colors["screen_color"])
@@ -979,19 +947,21 @@ def settings_menu():
         settings_title_rect = settings_title.get_rect(center=(window_width / 2, 100))
         screen.blit(settings_title, settings_title_rect)
 
-        # Theme selection
+        # Additional elements
         theme_text = font.render(f"Theme: {current_theme.capitalize()}", True, colors["dark_text"])
-        theme_rect = theme_text.get_rect(center=(window_width / 2, 200))
+        theme_rect = theme_text.get_rect(center=(window_width / 2, 180))
         screen.blit(theme_text, theme_rect)
 
-        # Sound toggle
         sound_text = font.render(f"Sound: {'On' if sound_enabled else 'Off'}", True, colors["dark_text"])
-        sound_rect = sound_text.get_rect(center=(window_width / 2, 250))
+        sound_rect = sound_text.get_rect(center=(window_width / 2, 230))
         screen.blit(sound_text, sound_rect)
 
-        # Back to menu button
+        credits_text = font.render("Credits", True, colors["dark_text"])
+        credits_rect = credits_text.get_rect(center=(window_width / 2, 280))
+        screen.blit(credits_text, credits_rect)
+
         back_text = font.render("Back to Menu", True, colors["dark_text"])
-        back_rect = back_text.get_rect(center=(window_width / 2, 300))
+        back_rect = back_text.get_rect(center=(window_width / 2, 330))
         screen.blit(back_text, back_rect)
 
         pygame.display.flip()
@@ -1001,21 +971,105 @@ def settings_menu():
                 pygame.quit()
                 settings_running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                play_sound(mouse_click_sound)
                 mouse_pos = event.pos
                 if theme_rect.collidepoint(mouse_pos):
-                    # cycle through the themes
                     current_theme_index = (current_theme_index + 1) % len(themes_available)
                     current_theme = themes_available[current_theme_index]
                     apply_theme(current_theme)
                 elif sound_rect.collidepoint(mouse_pos):
                     sound_enabled = not sound_enabled
+                elif credits_rect.collidepoint(mouse_pos):
+                    credits_menu()
                 elif back_rect.collidepoint(mouse_pos):
                     settings_running = False
 
-        timer.tick(fps)
+
+def credits_menu():
+    credits_running = True
+    while credits_running:
+        screen.fill(colors["screen_color"])
+
+        # Display the title and your name
+        title_text = font.render("Credits", True, colors["dark_text"])
+        title_rect = title_text.get_rect(center=(window_width / 2, 50))
+        screen.blit(title_text, title_rect)
+
+        name_text = font.render("Julie Vondráčková", True, colors["dark_text"])
+        name_rect = name_text.get_rect(center=(window_width / 2, 100))
+        screen.blit(name_text, name_rect)
+
+        # Link to GitHub
+        github_text = font.render("Visit my GitHub", True, colors["dark_text"])
+        github_rect = github_text.get_rect(center=(window_width / 2, 180))
+        screen.blit(github_text, github_rect)
+
+        # Link to itch.io
+        itch_text = font.render("Visit my itch.io", True, colors["dark_text"])
+        itch_rect = itch_text.get_rect(center=(window_width / 2, 230))
+        screen.blit(itch_text, itch_rect)
+
+        # Display an image if desired (optional)
+        try:
+            image = pygame.image.load('assets/profile.png')
+            image_rect = image.get_rect(center=(window_width / 2, 300))
+            screen.blit(image, image_rect)
+        except pygame.error:
+            error_text = font.render("Failed to load image", True, colors["dark_text"])
+            error_rect = error_text.get_rect(center=(window_width / 2, 300))
+            screen.blit(error_text, error_rect)
+
+        # Back button
+        back_text = font.render("Back to Settings", True, colors["dark_text"])
+        back_rect = back_text.get_rect(center=(window_width / 2, 400))
+        screen.blit(back_text, back_rect)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                credits_running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
+                if back_rect.collidepoint(event.pos):
+                    credits_running = False
+                elif github_rect.collidepoint(event.pos):
+                    webbrowser.open('https://github.com/susenecka44')
+                elif itch_rect.collidepoint(event.pos):
+                    webbrowser.open('https://susenka44.itch.io')
 
 
 # endregion MAIN MENU
+
+# region MAIN GAME LOOP
+def main():
+    """
+    Run the main menu and the game loop based on the user's choice
+    """
+    global run
+    run, mode_changed = main_menu()
+    while run is not None and run is not False:
+        if mode_changed:
+            if run == 'classic':
+                reset_game_data()
+                classic_game_loop()
+            elif run == 'timed':
+                reset_timed_game_data()
+                timed_game_loop()
+        else:
+            if run == 'classic':
+                classic_game_loop()
+            elif run == 'timed':
+                timed_game_loop()
+
+        run, mode_changed = main_menu()
+
+
+if __name__ == "__main__":
+    main()
+
+
+# endregion MAIN GAME LOOP
+
 
 pygame.quit()
