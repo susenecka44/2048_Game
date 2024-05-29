@@ -73,24 +73,86 @@ fps = 60
 font = pygame.font.SysFont('Arial', 24)
 
 # color library
-colors = {0: (251, 248, 204),
-          2: (253, 228, 207),
-          4: (255, 207, 210),
-          8: (241, 192, 232),
-          16: (207, 186, 240),
-          32: (163, 196, 243),
-          64: (144, 219, 244),
-          128: (142, 236, 245),
-          256: (152, 245, 225),
-          512: (185, 251, 192),
-          1024: (175, 252, 175),
-          2048: (149, 247, 186),
-          "light_text": (126, 130, 135),
-          "dark_text": (42, 43, 46),
-          "other": (105, 153, 93),
-          "bg": (42, 43, 46),
-          "screen_color": (251, 251, 251)
-          }
+themes = {
+    "basic": {
+        0: (251, 248, 204),
+        2: (253, 228, 207),
+        4: (255, 207, 210),
+        8: (241, 192, 232),
+        16: (207, 186, 240),
+        32: (163, 196, 243),
+        64: (144, 219, 244),
+        128: (142, 236, 245),
+        256: (152, 245, 225),
+        512: (185, 251, 192),
+        1024: (175, 252, 175),
+        2048: (149, 247, 186),
+        "light_text": (126, 130, 135),
+        "dark_text": (42, 43, 46),
+        "other": (105, 153, 93),
+        "bg": (42, 43, 46),
+        "screen_color": (251, 251, 251)
+    },
+    "dark": {
+        0: (50, 50, 50),
+        2: (75, 75, 75),
+        4: (100, 100, 100),
+        8: (125, 125, 125),
+        16: (150, 150, 150),
+        32: (175, 175, 175),
+        64: (200, 200, 200),
+        128: (225, 225, 225),
+        256: (100, 100, 130),
+        512: (130, 100, 170),
+        1024: (160, 100, 210),
+        2048: (190, 100, 250),
+        "light_text": (220, 220, 220),
+        "dark_text": (20, 20, 20),
+        "other": (90, 90, 90),
+        "bg": (30, 30, 30),
+        "screen_color": (40, 40, 40)
+    },
+    "classic": {
+        0: (238, 228, 218, 0.35),
+        2: (238, 228, 218),
+        4: (237, 224, 200),
+        8: (242, 177, 121),
+        16: (245, 149, 99),
+        32: (246, 124, 95),
+        64: (246, 94, 59),
+        128: (237, 207, 114),
+        256: (237, 204, 97),
+        512: (237, 200, 80),
+        1024: (237, 197, 63),
+        2048: (237, 194, 46),
+        "light_text": (249, 246, 242),
+        "dark_text": (119, 110, 101),
+        "other": (187, 173, 160),
+        "bg": (187, 173, 160),
+        "screen_color": (250, 248, 239)
+    },
+    "retro": {
+        0: (255, 248, 231),
+        2: (255, 198, 207),
+        4: (237, 204, 194),
+        8: (255, 179, 183),
+        16: (255, 223, 186),
+        32: (204, 209, 197),
+        64: (167, 204, 194),
+        128: (236, 185, 213),
+        256: (215, 204, 200),
+        512: (163, 154, 196),
+        1024: (196, 204, 234),
+        2048: (234, 213, 198),
+        "light_text": (245, 245, 245),
+        "dark_text": (35, 31, 32),
+        "other": (150, 136, 125),
+        "bg": (250, 245, 240),
+        "screen_color": (255, 250, 250)
+    }
+}
+
+colors = themes['classic']
 
 # board variables definitions
 board_rectangle_dimensions = [0, 0, 400, 400]
@@ -148,6 +210,14 @@ mouse_click_sound = pygame.mixer.Sound('sounds/button_click.mp3')
 
 def play_sound(sound):
     pygame.mixer.Sound.play(sound)
+
+
+current_theme = 'classic'
+
+
+def apply_theme(theme):
+    global colors, themes
+    colors = themes[theme]
 
 
 # endregion ADDITIONS
@@ -233,7 +303,7 @@ def draw_return_button():
     """
     Draw the return to menu button on the game screen
     """
-    return_text = font.render("Return to Menu", True, colors["light_text"])
+    return_text = font.render("Return to Menu", True, colors[2])
     return_button_rect = return_text.get_rect(center=(300, 470))
     pygame.draw.rect(screen, colors["bg"], return_button_rect.inflate(20, 10))
     screen.blit(return_text, return_button_rect)
@@ -595,6 +665,7 @@ def main_menu():
 
 
 def return_to_menu():
+    play_sound(mouse_click_sound)
     return main_menu()
 
 
@@ -630,6 +701,7 @@ def show_tutorial():
             if menu_event.type == pygame.QUIT:
                 tutorial_running = False
             elif menu_event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
                 if back_rect.collidepoint(menu_event.pos):
                     tutorial_running = False
 
@@ -811,6 +883,7 @@ def main():
     """
     global run
     run, mode_changed = main_menu()
+    apply_theme('retro')
     while run is not None and run is not False:
         if mode_changed:
             if run == 'classic':
