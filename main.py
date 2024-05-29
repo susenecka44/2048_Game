@@ -153,6 +153,7 @@ themes = {
 }
 
 colors = themes['classic']
+current_theme = 'classic'
 
 # board variables definitions
 board_rectangle_dimensions = [0, 0, 400, 400]
@@ -202,6 +203,7 @@ current_game_mode = None
 pygame.mixer.init()
 move_sound = pygame.mixer.Sound('sounds/move.mp3')
 mouse_click_sound = pygame.mixer.Sound('sounds/button_click.mp3')
+sound_enabled = True
 
 
 # endregion VARIABLES
@@ -209,15 +211,42 @@ mouse_click_sound = pygame.mixer.Sound('sounds/button_click.mp3')
 # region ADDITIONS
 
 def play_sound(sound):
-    pygame.mixer.Sound.play(sound)
-
-
-current_theme = 'classic'
+    if sound_enabled:
+        pygame.mixer.Sound.play(sound)
 
 
 def apply_theme(theme):
-    global colors, themes
+    global colors, themes, current_theme
+    current_theme = theme
     colors = themes[theme]
+
+
+def extend_theme_colors(color_themes):
+    new_values = [4096, 8192, 16384, 32768, 65536, 131072]  # Add more if needed
+    for theme_name, color_scheme in color_themes.items():
+        current_max_value = 2048
+        for value in new_values:
+            if theme_name == "basic":
+                # Incremental darkening or lightening for the basic theme
+                last_color = color_scheme[current_max_value]
+                new_color = tuple(min(max(0, x + 20 * (value // 2048)), 255) for x in last_color)
+                color_scheme[value] = new_color
+            elif theme_name == "dark":
+                # Incremental lightening for the dark theme
+                last_color = color_scheme[current_max_value]
+                new_color = tuple(min(max(0, x + 15 * (value // 2048)), 255) for x in last_color)
+                color_scheme[value] = new_color
+            elif theme_name == "classic":
+                # Keep a similar pattern but increment brightness slightly
+                last_color = color_scheme[current_max_value]
+                new_color = tuple(min(max(0, x + 10 * (value // 2048)), 255) for x in last_color)
+                color_scheme[value] = new_color
+            elif theme_name == "retro":
+                # Incremental changes with a vintage tint
+                last_color = color_scheme[current_max_value]
+                new_color = tuple(min(max(0, x - 10 * (value // 2048)), 255) for x in last_color)
+                color_scheme[value] = new_color
+            current_max_value = value
 
 
 # endregion ADDITIONS
@@ -602,7 +631,7 @@ def move_right(board, global_score):
 # region MAIN MENU
 def main_menu():
     """
-    Draw the main menu of the game with the start, timed mode, tutorial, and exit buttons
+    Draw the main menu of the game with the start, timed mode, tutorial, settings, and exit buttons
     """
     global current_game_mode
 
@@ -615,22 +644,27 @@ def main_menu():
 
         # Start Classic Game
         start_game_text = font.render("Classic Mode", True, colors["dark_text"])
-        start_game_rect = start_game_text.get_rect(center=(window_width / 2, 200))
+        start_game_rect = start_game_text.get_rect(center=(window_width / 2, 180))
         screen.blit(start_game_text, start_game_rect)
 
         # Start Timed Game
         timed_game_text = font.render("Timed Mode", True, colors["dark_text"])
-        timed_game_rect = timed_game_text.get_rect(center=(window_width / 2, 250))
+        timed_game_rect = timed_game_text.get_rect(center=(window_width / 2, 230))
         screen.blit(timed_game_text, timed_game_rect)
 
         # Display Tutorial
         tutorial_text = font.render("Tutorial", True, colors["dark_text"])
-        tutorial_rect = tutorial_text.get_rect(center=(window_width / 2, 300))
+        tutorial_rect = tutorial_text.get_rect(center=(window_width / 2, 280))
         screen.blit(tutorial_text, tutorial_rect)
+
+        # Settings
+        settings_text = font.render("Settings", True, colors["dark_text"])
+        settings_rect = settings_text.get_rect(center=(window_width / 2, 330))
+        screen.blit(settings_text, settings_rect)
 
         # Exit Game
         exit_game_text = font.render("Exit Game", True, colors["dark_text"])
-        exit_game_rect = exit_game_text.get_rect(center=(window_width / 2, 350))
+        exit_game_rect = exit_game_text.get_rect(center=(window_width / 2, 380))
         screen.blit(exit_game_text, exit_game_rect)
 
         pygame.display.flip()
@@ -650,6 +684,8 @@ def main_menu():
                     new_mode = 'timed'
                 elif tutorial_rect.collidepoint(mouse_pos):
                     show_tutorial()
+                elif settings_rect.collidepoint(mouse_pos):
+                    settings_menu()
                 elif exit_game_rect.collidepoint(mouse_pos):
                     pygame.quit()
                     return None, False
@@ -704,6 +740,55 @@ def show_tutorial():
                 play_sound(mouse_click_sound)
                 if back_rect.collidepoint(menu_event.pos):
                     tutorial_running = False
+
+        timer.tick(fps)
+
+
+def settings_menu():
+    global current_theme, sound_enabled
+    settings_running = True
+    themes_available = ['basic', 'dark', 'classic', 'retro']
+    current_theme_index = themes_available.index(current_theme)  # Find the current index of the theme
+
+    while settings_running:
+        screen.fill(colors["screen_color"])
+        settings_title = font.render("Settings", True, colors["dark_text"])
+        settings_title_rect = settings_title.get_rect(center=(window_width / 2, 100))
+        screen.blit(settings_title, settings_title_rect)
+
+        # Theme selection
+        theme_text = font.render(f"Theme: {current_theme.capitalize()}", True, colors["dark_text"])
+        theme_rect = theme_text.get_rect(center=(window_width / 2, 200))
+        screen.blit(theme_text, theme_rect)
+
+        # Sound toggle
+        sound_text = font.render(f"Sound: {'On' if sound_enabled else 'Off'}", True, colors["dark_text"])
+        sound_rect = sound_text.get_rect(center=(window_width / 2, 250))
+        screen.blit(sound_text, sound_rect)
+
+        # Back to menu button
+        back_text = font.render("Back to Menu", True, colors["dark_text"])
+        back_rect = back_text.get_rect(center=(window_width / 2, 300))
+        screen.blit(back_text, back_rect)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                settings_running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
+                mouse_pos = event.pos
+                if theme_rect.collidepoint(mouse_pos):
+                    # cycle through the themes
+                    current_theme_index = (current_theme_index + 1) % len(themes_available)
+                    current_theme = themes_available[current_theme_index]
+                    apply_theme(current_theme)
+                elif sound_rect.collidepoint(mouse_pos):
+                    sound_enabled = not sound_enabled
+                elif back_rect.collidepoint(mouse_pos):
+                    settings_running = False
 
         timer.tick(fps)
 
@@ -883,7 +968,6 @@ def main():
     """
     global run
     run, mode_changed = main_menu()
-    apply_theme('retro')
     while run is not None and run is not False:
         if mode_changed:
             if run == 'classic':
