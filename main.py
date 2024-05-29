@@ -68,9 +68,11 @@ Variables used in the game
     - sound_enabled: bool -> sound status
     - move_sound: pygame.mixer.Sound -> sound for the move
     - mouse_click_sound: pygame.mixer.Sound -> sound for the mouse click
+    - reset_sound: pygame.mixer.Sound -> sound for the reset
     
     - themes: dict -> themes available in the game
     - current_theme: str -> current theme of the game
+    
 """
 window_width = 400
 window_height = 500
@@ -183,8 +185,11 @@ direction = ''
 
 score = 0
 
+score_file = 'assets/score_files/high_score.txt'
+timed_score_file = 'assets/score_files/timed_high_score.txt'
+
 try:
-    with open('assets/score_files/high_score.txt', 'r') as file:
+    with open(score_file, 'r') as file:
         high_score = int(file.read())
 except FileNotFoundError:
     high_score = 0
@@ -199,7 +204,7 @@ cooldown_counter = 10
 start_time = pygame.time.get_ticks()
 timed_score = 0
 try:
-    with open('assets/score_files/timed_high_score.txt', 'r') as file:
+    with open(timed_score_file, 'r') as file:
         timed_high_score = int(file.read())
 except FileNotFoundError:
     timed_high_score = 0
@@ -212,12 +217,13 @@ current_game_mode = None
 pygame.mixer.init()
 move_sound = pygame.mixer.Sound('assets/sounds/move.mp3')
 mouse_click_sound = pygame.mixer.Sound('assets/sounds/button_click.mp3')
+reset_sound = pygame.mixer.Sound('assets/sounds/reset.mp3')
 sound_enabled = True
 
 
 # endregion VARIABLES
 
-# region ADDITIONS
+# region UI ADDITIONS
 
 def play_sound(sound):
     """
@@ -273,7 +279,63 @@ def extend_theme_colors(color_themes):
             current_max_value = value
 
 
-# endregion ADDITIONS
+# endregion UI ADDITIONS
+
+# region RESET HIGH SCORES
+def reset_high_scores():
+    play_sound(reset_sound)
+    are_you_sure_reset()
+
+
+def are_you_sure_reset():
+    """
+    Display a confirmation screen for the high score reset -> both options return to settings
+    """
+    confirming = True
+    while confirming:
+        screen.fill(colors["screen_color"])
+        confirm_text = font.render("Really reset the high scores?", True, colors["dark_text"])
+        confirm_rect = confirm_text.get_rect(center=(window_width / 2, 150))
+        screen.blit(confirm_text, confirm_rect)
+
+        yes_text = font.render("Yes", True, colors["dark_text"])
+        yes_rect = yes_text.get_rect(center=(window_width / 2 - 50, 200))
+        screen.blit(yes_text, yes_rect)
+
+        return_text = font.render("Return", True, colors["dark_text"])
+        return_rect = return_text.get_rect(center=(window_width / 2 + 50, 200))
+        screen.blit(return_text, return_rect)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
+                if yes_rect.collidepoint(event.pos):
+                    # Perform the actual reset
+                    perform_reset()
+                    confirming = False
+                elif return_rect.collidepoint(event.pos):
+                    confirming = False
+
+
+def perform_reset():
+    """
+    Reset the high scores in the game
+    """
+    global high_score, timed_high_score
+    high_score = 0
+    timed_high_score = 0
+    with open(score_file, 'w') as highscore_file:
+        highscore_file.write('0')
+    with open(timed_score_file, 'w') as timed_highscore_file:
+        timed_highscore_file.write('0')
+
+
+# endregion RESET HIGH SCORES
 
 # region DRAW FUNCTIONS
 def draw_board(game_type='classic'):
@@ -756,7 +818,7 @@ def classic_game_loop():
         if game_over:
             draw_over()
             if high_score > init_high_score:
-                with open('assets/score_files/high_score.txt', 'w') as highscore_file:
+                with open(score_file, 'w') as highscore_file:
                     highscore_file.write(str(high_score))
             init_high_score = high_score
 
@@ -805,7 +867,7 @@ def timed_game_loop():
         # Check if a new timed high score is achieved
         if timed_score > timed_high_score:
             timed_high_score = timed_score
-            with open('assets/score_files/timed_high_score.txt', 'w') as timed_highscore_file:
+            with open(timed_score_file, 'w') as timed_highscore_file:
                 timed_highscore_file.write(str(timed_high_score))
 
         # Draw the game over screen
@@ -935,6 +997,9 @@ def show_tutorial():
 
 
 def settings_menu():
+    """
+    Display the settings menu with options to change the theme, sound, reset high scores, and credits
+    """
     global current_theme, sound_enabled
 
     settings_running = True
@@ -947,21 +1012,25 @@ def settings_menu():
         settings_title_rect = settings_title.get_rect(center=(window_width / 2, 100))
         screen.blit(settings_title, settings_title_rect)
 
-        # Additional elements
+        # Additional settings elements
         theme_text = font.render(f"Theme: {current_theme.capitalize()}", True, colors["dark_text"])
-        theme_rect = theme_text.get_rect(center=(window_width / 2, 180))
+        theme_rect = theme_text.get_rect(center=(window_width / 2, 150))
         screen.blit(theme_text, theme_rect)
 
         sound_text = font.render(f"Sound: {'On' if sound_enabled else 'Off'}", True, colors["dark_text"])
-        sound_rect = sound_text.get_rect(center=(window_width / 2, 230))
+        sound_rect = sound_text.get_rect(center=(window_width / 2, 200))
         screen.blit(sound_text, sound_rect)
 
+        reset_scores_text = font.render("Reset High Scores", True, colors["dark_text"])
+        reset_scores_rect = reset_scores_text.get_rect(center=(window_width / 2, 250))
+        screen.blit(reset_scores_text, reset_scores_rect)
+
         credits_text = font.render("Credits", True, colors["dark_text"])
-        credits_rect = credits_text.get_rect(center=(window_width / 2, 280))
+        credits_rect = credits_text.get_rect(center=(window_width / 2, 300))
         screen.blit(credits_text, credits_rect)
 
         back_text = font.render("Back to Menu", True, colors["dark_text"])
-        back_rect = back_text.get_rect(center=(window_width / 2, 330))
+        back_rect = back_text.get_rect(center=(window_width / 2, 350))
         screen.blit(back_text, back_rect)
 
         pygame.display.flip()
@@ -969,8 +1038,9 @@ def settings_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                settings_running = False
+                return None, False
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                play_sound(mouse_click_sound)
                 mouse_pos = event.pos
                 if theme_rect.collidepoint(mouse_pos):
                     current_theme_index = (current_theme_index + 1) % len(themes_available)
@@ -978,6 +1048,8 @@ def settings_menu():
                     apply_theme(current_theme)
                 elif sound_rect.collidepoint(mouse_pos):
                     sound_enabled = not sound_enabled
+                elif reset_scores_rect.collidepoint(mouse_pos):
+                    reset_high_scores()
                 elif credits_rect.collidepoint(mouse_pos):
                     credits_menu()
                 elif back_rect.collidepoint(mouse_pos):
@@ -985,6 +1057,9 @@ def settings_menu():
 
 
 def credits_menu():
+    """
+    Display the credits screen with the author's name and links to GitHub and itch.io
+    """
     credits_running = True
     while credits_running:
         screen.fill(colors["screen_color"])
@@ -1068,8 +1143,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-
 # endregion MAIN GAME LOOP
-
 
 pygame.quit()
