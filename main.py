@@ -204,11 +204,14 @@ cooldown_counter = 10
 # timed game variables
 start_time = pygame.time.get_ticks()
 timed_score = 0
+
 try:
     with open(timed_score_file, 'r') as file:
         timed_high_score = int(file.read())
 except FileNotFoundError:
     timed_high_score = 0
+
+
 init_time_high_score = timed_high_score
 
 run = False
