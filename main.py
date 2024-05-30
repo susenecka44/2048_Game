@@ -230,7 +230,7 @@ json_save_file = 'assets/save_files/save.json'
 
 def save_game_data():
     """
-    Save the game data to the save file
+    Save the game data including high scores to the save file
     """
     game_data = {
         "board_values": board_values,
@@ -246,22 +246,33 @@ def save_game_data():
 
 def load_game_data():
     """
-    Load the game data from the save file
+    Load the game data including high scores from the save file
     """
-    with open(json_save_file, 'r') as f:
-        game_data = json.load(f)
+    try:
+        with open(json_save_file, 'r') as f:
+            game_data = json.load(f)
+        global board_values, score, high_score, timed_high_score, sound_enabled, current_theme
+        board_values = game_data.get("board_values", [[0] * 4 for _ in range(4)])
+        score = game_data.get("score", 0)
+        high_score = game_data.get("high_score", 0)
+        timed_high_score = game_data.get("timed_high_score", 0)
+        sound_enabled = game_data.get("sound_enabled", True)
+        current_theme = game_data.get("current_theme", 'classic')
+        apply_theme(current_theme)
+    except FileNotFoundError:
+        # Initialize with default values if file is not found
+        board_values = [[0 for _ in range(4)] for _ in range(4)]
+        score = 0
+        high_score = 0
+        timed_high_score = 0
+        sound_enabled = True
+        current_theme = 'classic'
+        apply_theme(current_theme)
+        save_game_data()
 
-    global board_values, score, high_score, timed_high_score, sound_enabled, current_theme
-    board_values = game_data.get("board_values", [[0] * 4 for _ in range(4)])
-    score = game_data.get("score", 0)
-    high_score = game_data.get("high_score", 0)
-    timed_high_score = game_data.get("timed_high_score", 0)
-    sound_enabled = game_data.get("sound_enabled", True)
-    current_theme = game_data.get("current_theme", 'classic')
-    apply_theme(current_theme)
+    # endregion LOAD SAVE DATA
 
-
-# endregion LOAD SAVE DATA
+#endregion LOAD SAVE DATA
 
 # region UI ADDITIONS
 
