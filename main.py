@@ -370,10 +370,10 @@ def perform_reset():
     high_score = 0
     timed_high_score = 0
 
-    # Assuming game_data.json is the file where all game data is stored
+    # Assuming json_save_file is the file where all game data is stored
     try:
         # Load the existing data
-        with open('game_data.json', 'r') as gamedata_file:
+        with open(json_save_file, 'r') as gamedata_file:
             data = json.load(gamedata_file)
 
         # Update the high scores in the data
@@ -381,7 +381,7 @@ def perform_reset():
         data['timed_high_score'] = timed_high_score
 
         # Write the updated data back to the file
-        with open('game_data.json', 'w') as gamedata_file:
+        with open(json_save_file, 'w') as gamedata_file:
             json.dump(data, gamedata_file, indent=4)
 
     except FileNotFoundError:
@@ -391,7 +391,7 @@ def perform_reset():
             "timed_high_score": timed_high_score,
             # Include other default values as needed
         }
-        with open('game_data.json', 'w') as gamedata_file:
+        with open(json_save_file, 'w') as gamedata_file:
             json.dump(data, gamedata_file, indent=4)
 
 
