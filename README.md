@@ -1,191 +1,103 @@
+# User Documentation for 2048 Game
 
-# 2048 Game Implementation Using Pygame
+## Introduction
+Welcome to the 2048 Game, a fun and engaging puzzle game where you combine tiles with the same numbers to achieve a high score. This guide will help you understand how to play the game, navigate through different modes, and use available features.
 
-This documentation covers the 2048 game implementation using the Pygame library, written by Julie Vondráčková for the Programming in Python course at Charles University on May 28, 2024.
+## Getting Started
 
-## Game Description
+### Installation
+Ensure you have Python and Pygame installed on your computer. Follow these steps to start the game:
+1. Install Python from [python.org](https://python.org).
+2. Install Pygame by running `pip install pygame` in your command prompt or terminal.
+3. Download and extract the game files from the provided repository.
+4. Run the game script using `python 2048_game.py`.
 
-- **Modes**:
-  - **Classic Mode**: Play without a time limit.
-  - **Timed Mode**: You have a 3-minute time limit to achieve the highest score possible.
+### Main Menu
+When you start the game, you will be presented with the main menu options:
+- **Classic Mode**: Start the game in classic mode without time constraints.
+- **Timed Mode**: Challenge yourself in a 3-minute timed game session.
+- **Tutorial**: Learn how to play 2048.
+- **Settings**: Adjust game settings like theme and sound.
+- **Exit Game**: Exit the game.
 
-- **Features**:
-  - Ability to undo the last move, with a cooldown of 10 moves.
-  - Ability to return to the main menu at any time.
-  - Maintains a high score for both game modes.
-  - Includes a tutorial screen explaining the rules.
+## Gameplay
 
-## Dependencies
+### Controls
+- **Arrow Keys**: Use the arrow keys to slide the tiles across the board.
+- **Enter**: Restart the game after a game over.
+- **ESC**: Return to the main menu during gameplay.
 
-To run this game, ensure that you have the Pygame library installed. You can install it using pip:
+### Game Modes
+- **Classic Mode**: Play as long as you want, trying to beat your high score.
+- **Timed Mode**: You have 180 seconds to make as many points as possible.
 
-```bash
-pip install pygame
-```
+### Scoring
+Combine tiles to increase your score. Each merge adds the combined value to your score.
 
-## Game Components
+## Settings
+Change the game's appearance and sound in the settings menu:
+- **Theme**: Choose between Basic, Dark, Classic, and Retro themes.
+- **Sound**: Toggle sound effects on or off.
 
-### Variables
+## Tips for High Scores
+- Plan your moves ahead.
+- Try to keep your highest value tile in a corner.
+- Focus on combining smaller tiles to create room for new tiles.
 
-- Window dimensions and screen setup.
-- Definitions for game timers and score tracking.
-- Colors and fonts for game aesthetics.
-- Data structures for storing board values and game state.
+Enjoy your game, and try to reach 2048!
 
-### Main Functions
 
-- `draw_board()`: Handles the visual representation of the game board.
-- `draw_pieces()`: Draws the tiles on the board based on their values.
-- `spawn_piece()`: Adds a new tile to the board in a random position.
-- `move_board()`: Updates the board state based on player input.
-- `main_menu()`: Displays the main menu and handles mode selection.
+# Technical Documentation for 2048 Game
 
-### Game Mechanics
+## Overview
+This document details the technical aspects of the 2048 game implemented in Python using the Pygame library. It covers the game's structure, main modules, and core functionalities.
 
-- **Undo Function**: Allows the player to revert to the previous board state. Cooldown applied after each use.
-- **Game Over Conditions**: Checks if there are no more valid moves left.
-- **Score Handling**: Manages and updates the score throughout the game.
+## System Requirements
+- Python 3.x
+- Pygame library
 
-### Utility Functions
+## Modules and Libraries
+The game uses the Pygame library for rendering the game interface and handling user interactions. Key Python modules used include:
+- `pygame`: For game graphics and events.
+- `random`: For spawning new tiles at random positions.
+- `json`: For saving and loading game state.
 
-- `reset_game_data()`: Resets all game-related variables for a new game session.
-- `handle_game_events()`: Processes events like mouse clicks and key presses during gameplay.
+## Game Architecture
+The game is structured into several parts:
 
-## Running the Game
+### Main Loop
+The game's entry point is the `main()` function, which initializes the game and manages the game loop.
 
-To run the game, execute the script in an environment where Pygame is installed. The main game loop is initiated if the script is run as the main module:
+### Game Initialization
+- Load configurations and set up the game window.
+- Initialize game states such as the board configuration and scores.
 
-```python
-if __name__ == "__main__":
-    main()
-```
+### Game Modes
+- **Classic Mode**: Manage the game logic without time constraints.
+- **Timed Mode**: Introduce a timer and manage game state transitions based on time.
 
-The game window will open, and you can select between Classic or Timed mode from the main menu.
+### Event Handling
+- Keyboard inputs for tile movement.
+- Mouse inputs for navigating menus and buttons.
+
+### Rendering
+- Draw the game board, tiles, and UI elements based on the current state.
+- Update the display to reflect changes.
+
+### Saving and Loading
+- Use JSON files to save the high scores and board state.
+- Load existing state at game start-up to resume previous sessions.
+
+## File Structure
+- `2048_game.py`: Main game script containing all game logic and UI rendering.
+- `assets/`: Directory containing sound effects and save files.
+
+## Extending the Game
+To add new features or modify existing ones:
+1. Clone the repository.
+2. Navigate to the game script.
+3. Make changes to add features like new game modes or improved AI.
+4. Test the changes thoroughly before deployment.
 
 ## Conclusion
-
-This 2048 game implementation provides an interactive way to understand game development with Pygame, focusing on handling user input, rendering graphics, and implementing game logic.
-
-## Author
-
-**Julie Vondráčková**
-- *Date*: 2024-05-28
-- *Location*: Charles University, Faculty of Mathematics and Physics
-
-
-```
-documentation generated by pydoc ( More technical ):
-
-FUNCTIONS
-    can_move_check(board)
-        Check if the board can be moved in any direction (up, down, left, right) by checking if there are any same adjacent
-        For determining if the game is over
-        Args:
-            board: list -> values of the board
-        Return:
-            bool -> True if the board can be moved in any direction, False otherwise
-
-    classic_game_loop()
-        Main game loop for the classic mode
-
-    draw_board(game_type='classic')
-        Draw the board on the screen using the pygame.draw.rect function
-
-    draw_over(end_text='Game Over')
-        Draw the game over screen
-        Args:
-            end_text: str -> text to display on the game over screen
-
-    draw_pieces(board)
-        Draw the pieces on the board
-        Colors of the pieces are defined in the colors dictionary by numbers in it
-        Text color inside is defined by the value of the piece + font scale is adjusted based on the length of the value
-        Args:
-            board: list -> values of the board
-
-    draw_return_button()
-        Draw the return to menu button on the game screen
-
-    draw_timer(remaining_time)
-        Display the remaining time on the game screen
-
-    draw_undo_button()
-        Draw the undo button on the game screen with the cooldown counter or with undo text
-        Return:
-            undo_rect: pygame.Rect -> rectangle of the undo button
-
-    handle_game_events(game_type='classic')
-        Check the game events and handle them correctly based on the game type
-        Args:
-            game_type: str -> type of the game (classic or timed)
-
-    handle_key_press(key_press_event)
-        Handle the key press events for the game
-        Args:
-            key_press_event: pygame.event -> key press event on which the function decides what to do next
-
-    handle_mouse_button(mouse_button_event)
-        Handle the mouse button events for the game
-        Args:
-            mouse_button_event: pygame.event -> key press event on which the function decides what to do next
-
-    main()
-        Run the main menu and the game loop based on the user's choice
-
-    main_menu()
-        Draw the main menu of the game with the start, timed mode, tutorial, and exit buttons
-
-    move_board(board, move_direction, game_type='classic')
-        Move the board in the given direction
-        Args:
-            board: list -> values of the board
-            move_direction: str -> direction of the move
-            game_type: str -> type of the game (classic or timed)
-
-    move_down(board, global_score)
-        Move the board down and merge the tiles + update the score
-        Args:
-            board: list -> values of the board
-            global_score: int -> score of the game
-        Return:
-            board: list -> updated values of the board after move DOWN
-            global_score: int -> updated score of the game
-
-    move_left(board, global_score)
-        Move the board left and merge the tiles + update the score
-        Args:
-            board: list -> values of the board
-            global_score: int -> score of the game
-        Return:
-            board: list -> updated values of the board after move LEFT
-            global_score: int -> updated score of the game
-
-    move_right(board, global_score)
-        Move the board right and merge the tiles + update the score
-        Args:
-            board: list -> values of the board
-            global_score: int -> score of the game
-        Return:
-            board: list -> updated values of the board after move RIGHT
-            global_score: int -> updated score of the game
-
-    move_up(board, global_score)
-        Move the board up and merge the tiles + update the score
-        Args:
-            board: list -> values of the board
-            global_score: int -> score of the game
-        Return:
-            board: list -> updated values of the board after move UP
-            global_score: int -> updated score of the game
-
-    reset_game_data()
-        Restart the game -> resets game values
-
-    reset_timed_game_data()
-        Restart the timed game -> resets game values + timed game values
-
-    return_one_move()
-        Return one move back in the game by popping the last state from the previous_states list
-        Return:
-            bool -> True if the move is undone, False otherwise
-```
+This documentation provides a technical snapshot of the 2048 game implementation. For detailed insights into the code, refer to the inline comments in the `2048_game.py` script.
