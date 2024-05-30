@@ -186,15 +186,7 @@ direction = ''
 
 score = 0
 
-score_file = 'assets/score_files/high_score.txt'
-timed_score_file = 'assets/score_files/timed_high_score.txt'
-
-try:
-    with open(score_file, 'r') as file:
-        high_score = int(file.read())
-except FileNotFoundError:
-    high_score = 0
-
+high_score = 0
 init_high_score = high_score
 
 # return buttons
@@ -204,13 +196,7 @@ cooldown_counter = 10
 # timed game variables
 start_time = pygame.time.get_ticks()
 timed_score = 0
-
-try:
-    with open(timed_score_file, 'r') as file:
-        timed_high_score = int(file.read())
-except FileNotFoundError:
-    timed_high_score = 0
-
+timed_high_score = 0
 init_time_high_score = timed_high_score
 
 run = False
@@ -398,10 +384,8 @@ def perform_reset():
         with open('game_data.json', 'w') as gamedata_file:
             json.dump(data, gamedata_file, indent=4)
 
-        print("High scores reset successfully.")
     except FileNotFoundError:
         # Handle the case where the game data file does not exist
-        print("Game data file not found. Creating a new one with default values.")
         data = {
             "high_score": high_score,
             "timed_high_score": timed_high_score,
@@ -893,10 +877,7 @@ def classic_game_loop():
         # Draw the game over screen and update the high score file
         if game_over:
             draw_over()
-            if high_score > init_high_score:
-                with open(score_file, 'w') as highscore_file:
-                    highscore_file.write(str(high_score))
-            init_high_score = high_score
+            save_game_data()
 
         if score > high_score:
             high_score = score
@@ -943,8 +924,7 @@ def timed_game_loop():
         # Check if a new timed high score is achieved
         if timed_score > timed_high_score:
             timed_high_score = timed_score
-            with open(timed_score_file, 'w') as timed_highscore_file:
-                timed_highscore_file.write(str(timed_high_score))
+            save_game_data()
 
         # Draw the game over screen
         if remaining_time <= 0 or game_over:
