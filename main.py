@@ -211,7 +211,6 @@ try:
 except FileNotFoundError:
     timed_high_score = 0
 
-
 init_time_high_score = timed_high_score
 
 run = False
@@ -275,7 +274,8 @@ def load_game_data():
 
     # endregion LOAD SAVE DATA
 
-#endregion LOAD SAVE DATA
+
+# endregion LOAD SAVE DATA
 
 # region UI ADDITIONS
 
