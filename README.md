@@ -47,6 +47,10 @@ Change the game's appearance and sound in the settings menu:
 Enjoy your game, and try to reach 2048!
 
 
+
+
+---
+
 # Technical Documentation for 2048 Game
 
 ## Overview
